@@ -4,22 +4,12 @@
  */
 package com.paycraftsystems.cmfb.services;
 
-import com.paycraftsystems.cmfb.dto.AuthResponseData;
-import com.paycraftsystems.cmfb.dto.ChangeUserPasswordRequest;
-import com.paycraftsystems.cmfb.dto.ChangeUserPasswordRequestObj;
-import com.paycraftsystems.cmfb.dto.ResetSysCredRequest;
-import com.paycraftsystems.cmfb.dto.ResetSysCredRequestObj;
-import com.paycraftsystems.cmfb.dto.SyncPasswordRequest;
+import com.paycraftsystems.cmfb.dto.MakePaymentRequest;
+import com.paycraftsystems.cmfb.dto.MakePaymentRequestObj;
 import com.paycraftsystems.cmfb.dto.SyncPasswordRequestObj;
-import com.paycraftsystems.cmfb.dto.UserLoginRequestV2;
-import com.paycraftsystems.cmfb.dto.UserLoginRequestV2Obj;
-import com.paycraftsystems.cmfb.dto.response.AuthSyncResponse;
 import com.paycraftsystems.cmfb.dto.response.GenericResponse;
 import com.paycraftsystems.cmfb.dto.response.GenericResponseObj;
-import com.paycraftsystems.cmfb.dto.response.ResponseStatusHeaders;
-import com.paycraftsystems.cmfb.dto.response.SysResetResponse;
-import com.paycraftsystems.cmfb.dto.response.SysResetResponseObj;
-import com.paycraftsystems.cmfb.dto.response.UserResponse;
+import com.paycraftsystems.cmfb.dto.response.MakePaymentResponse;
 import com.paycraftsystems.cmfb.dto.response.ValidateCheckResponse;
 import com.paycraftsystems.cu.dto.VerifyPaymentRequest;
 import com.paycraftsystems.cu.dto.VerifyPaymentRequestObj;
@@ -93,21 +83,21 @@ public class CUService {
     //ChangeUserPasswordRequest changeUserPasswordRequest = new ChangeUserPasswordRequest(doLookup.tid, doLookup.emailAddress, doLookup.mobileNo, fromJson.password, fromJson.verifyPassword, fromJson.newPassword,  "WEB");
                 
     
-    public @NotNull GenericResponseObj doMakepayment(SyncPasswordRequest request) {
+    public @NotNull MakePaymentResponse doMakepayment(MakePaymentRequest request) {
         log.info("-- GenericResponse --"+request);
-        GenericResponse requestResponse;
+        MakePaymentResponse requestResponse;
         //GenericResponseObj
         var status = 0;
         try (var client = ClientBuilder.newClient()) {
-           
-            SyncPasswordRequestObj irnDTO = new SyncPasswordRequestObj(request);
+          // https://paycutest.covenantuniversity.edu.ng/newpaysample/classes/completepayment.php
+            MakePaymentRequestObj irnDTO = new MakePaymentRequestObj(request);
             log.info("@@--irnDTO-- "+irnDTO);
-            var target = client.target(String.format("%s/processor/force-sync",cuServiceUrl));
+            var target = client.target(String.format("%s/completepayment.php",cuServiceUrl));
             var requestBuilder = target.request();
             //requestBuilder.header("x-api-key", firstEIVCAPIKey);
             //requestBuilder.header("x-api-secret", firstEIVCAPISecret); 
 
-            var httpResponse = requestBuilder.post(jakarta.ws.rs.client.Entity.json(new SyncPasswordRequestObj(request)));
+            var httpResponse = requestBuilder.post(jakarta.ws.rs.client.Entity.json(new MakePaymentRequestObj(request)));
             status = httpResponse.getStatus();
             switch (status) {
                 case 200,202 -> {
@@ -115,30 +105,32 @@ public class CUService {
                 }
                 case 400, 401, 403,404,405,500,504,901 -> {
                     var body = httpResponse.readEntity(String.class);
-                    log.warn("Invalid  sync profile response {} {}", httpResponse.getStatus(), body);
-                    throw new InvalidRequestException(String.format("Invalid doForceSync {%s} : {%s}",
+                    log.warn("Invalid  make payment response {} {}", httpResponse.getStatus(), body);
+                    throw new InvalidRequestException(String.format("Invalid make payment request {%s} : {%s}",
                             httpResponse.getStatus(), body));
                 }
                 default -> {
                     var body = httpResponse.readEntity(String.class);
-                    log.warn("Invalid doForceSync  exception {} {}", httpResponse.getStatus(), body);
-                    throw new ProcessingException(String.format("Error occurred while  sys login {%s}  {%s} : {%s}",
+                    log.warn("Invalid make payment  exception {} {}", httpResponse.getStatus(), body);
+                    throw new ProcessingException(String.format("Error occurred while  Invalid make payment {%s}  {%s} : {%s}",
                             request.code(),httpResponse.getStatus(), body));
                 }
             }
 
-              requestResponse = httpResponse.readEntity(GenericResponse.class);
-               log.info("-- GenericResponse -- "+requestResponse);
-              if(status == 200|| status == 202 && requestResponse !=null)
-              {
-                  return new GenericResponseObj(true, status, ErrorCodes.doErrorDesc(status), requestResponse, null);
-              
-              }
-              else
-              {
-                 return new GenericResponseObj(false, status, ErrorCodes.doErrorDesc(status), requestResponse, null);
-               
-              }
+              requestResponse = httpResponse.readEntity(MakePaymentResponse.class);
+//               log.info("-- GenericResponse -- "+requestResponse);
+//              if(status == 200|| status == 202 && requestResponse !=null)
+//              {
+//                  return new GenericResponseObj(true, status, ErrorCodes.doErrorDesc(status), requestResponse, null);
+//              
+//              }
+//              else
+//              {
+//                 return new GenericResponseObj(false, status, ErrorCodes.doErrorDesc(status), requestResponse, null);
+//               
+//              }
+
+            return requestResponse;
            }
        
     }

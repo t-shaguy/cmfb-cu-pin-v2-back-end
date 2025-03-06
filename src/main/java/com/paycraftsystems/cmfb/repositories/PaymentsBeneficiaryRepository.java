@@ -12,8 +12,6 @@ import com.paycraftsystems.cmfb.controller.ESEQHelper;
 import com.paycraftsystems.cmfb.dto.ApproveOrDeleteRequest;
 import com.paycraftsystems.cmfb.dto.PaymentBeneficiaryEditRequestObj;
 import com.paycraftsystems.cmfb.dto.PaymentBeneficiaryRequestObj;
-import com.paycraftsystems.cmfb.dto.PaymentSetupEditRequestObj;
-import com.paycraftsystems.cmfb.dto.PaymentSetupRequestObj;
 import com.paycraftsystems.cmfb.entities.PaymentBeneficiarySetup;
 import com.paycraftsystems.cmfb.entities.PaymentSetup;
 import com.paycraftsystems.cmfb.enumz.ResourceStatusEnum;
@@ -91,6 +89,8 @@ public class PaymentsBeneficiaryRepository implements  PanacheRepository<Payment
            {
           
                 obj = new PaymentBeneficiarySetup();
+                //obj.beneficiaryCollectionAccount = request.beneficiaryCollectionAccount;
+                //obj.beneficiaryCollectionAccountName = request.beneficiaryCollectionAccountName;
                 obj.beneficiaryDesc = request.beneficiaryDesc;
                 obj.beneficiaryName = request.beneficiaryName;
                 obj.beneficiaryAddress  = request.beneficiaryAddress;
@@ -132,6 +132,9 @@ public class PaymentsBeneficiaryRepository implements  PanacheRepository<Payment
            {
                 ps.beneficiaryDesc = request.beneficiaryDesc;
                 ps.beneficiaryName = request.beneficiaryName;
+                
+                //obj.beneficiaryCollectionAccount = request.beneficiaryCollectionAccount;
+                //obj.beneficiaryCollectionAccountName = request.beneficiaryCollectionAccountName;
                 ps.beneficiaryAddress  = request.beneficiaryAddress;
                 ps.beneficiaryContactPerson = request.beneficiaryContactPersonName;
                 ps.beneficiaryContactPersonEmail = request.beneficiaryContactPersonEmail;

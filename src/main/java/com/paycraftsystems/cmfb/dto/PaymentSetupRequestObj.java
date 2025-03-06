@@ -30,10 +30,15 @@ public PaymentSetupRequestObj(PaymentSetupRequest rx)
         this.paymentDesc = rx.paymentDesc();
         this.includeTax = rx.taxInc();
         this.taxAmount = rx.taxAmount();
+        this.fee = rx.fee();
+        this.paymentCollectionAccount = rx.paymentCollectionAccount();
+        this.paymentCollectionAccountName = rx.paymentCollectionAccountName();
 
 }
 
-
+ 
+ public String paymentCollectionAccount;
+ public String paymentCollectionAccountName;
  public long tid;
  public long beneficiaryId;
  public String payeeIdLabel;
@@ -42,6 +47,7 @@ public PaymentSetupRequestObj(PaymentSetupRequest rx)
  public double taxAmount;
  public double min_amount;
  public double amount;
+ public double fee;
  public long actionBy;
  public String actionByStr;
  public String paymentDesc;

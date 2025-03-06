@@ -30,10 +30,14 @@ public class UserProfileRequestObj{
         //this. verifyPin = rx.verifyPin();
         //this. deviceFingerprint = rx.deviceFingerprint();
         this.userRole = rx.userRole();
+        this.actionBy = rx.actionBy();
+        this.actionByStr = rx.actionByStr();
         //this.tid = rx.tid();
         
     }
-    
+   
+    public long actionBy;
+    public String actionByStr;
     public String tilAccount;
     public String otp;
     public String firstName;

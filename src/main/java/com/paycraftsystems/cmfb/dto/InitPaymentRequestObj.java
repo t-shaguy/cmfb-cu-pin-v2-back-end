@@ -33,12 +33,13 @@ public class InitPaymentRequestObj
           this.payeeAddress = rx.payeeAddress();
           this.payeeMobileNo = rx.payeeMobileNo();
           this.payeeId = rx.payeeId();
+          
      
  }
   
  
  
- 
+ public String paymentReference;
  public long paymentId;
 // public String plansDesc;
 // public Boolean amountFixed;

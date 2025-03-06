@@ -14,7 +14,7 @@ import jakarta.validation.constraints.Size;
  * @author paycraftsystems-i
  */
 
-public record PaymentBeneficiaryRequest(@NotBlank @Size(min=1, max=200, message="Beneficiary description cannot be null")String beneficiaryDesc,@NotBlank @Size(min=1, max=200, message=" Beneficiaty name cannot be null")String  beneficiaryName,@NotBlank @Size(min=1, max=200, message="Beneficiary Address cannot be null") String beneficiaryAddress,@NotBlank @Size(min=1, max=200, message="Beneficiary contact person cannot be null")String beneficiaryContactPersonName,@NotBlank @Size(min=1, max=200, message="Beneficiary contact person email cannot be null") @Email String beneficiaryContactPersonEmail,@NotBlank @Size(min=1, max=200, message="Beneficiary contact person mobile cannot be null") String beneficiaryContactPersonMobile,@Min(1) long actionBy,String actionByStr)
+public record PaymentBeneficiaryRequest(@NotBlank @Size(min=1, max=200, message="Beneficiary description cannot be null")String beneficiaryDesc,@NotBlank @Size(min=1, max=200, message=" Beneficiaty name cannot be null")String  beneficiaryName,@NotBlank @Size(min=1, max=200, message="Beneficiary Address cannot be null") String beneficiaryAddress,@NotBlank @Size(min=1, max=200, message="Beneficiary contact person cannot be null")String beneficiaryContactPersonName,@NotBlank @Size(min=1, max=200, message="Beneficiary contact person email cannot be null") @Email String beneficiaryContactPersonEmail,@NotBlank @Size(min=1, max=200, message="Beneficiary contact person mobile cannot be null") String beneficiaryContactPersonMobile, @Min(1) long actionBy,String actionByStr)
 {
     
    

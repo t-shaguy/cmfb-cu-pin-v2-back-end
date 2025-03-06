@@ -10,10 +10,10 @@ import com.paycraftsystems.resources.ErrorCodes;
 //import com.paycraftsystems.resources.ErrorCodes;
 import io.quarkus.hibernate.orm.panache.Panache;
 import io.quarkus.hibernate.orm.panache.PanacheEntityBase;
-import static io.quarkus.hibernate.orm.panache.PanacheEntity_.id;
+import static io.quarkus.hibernate.orm.panache.PanacheEntityBase.find;
+import static io.quarkus.hibernate.orm.panache.PanacheEntityBase.update;
 import io.quarkus.panache.common.Parameters;
 import java.io.Serializable;
-import java.math.BigInteger;
 import java.time.LocalDateTime;
 import jakarta.persistence.Basic;
 import jakarta.persistence.Column;
@@ -237,9 +237,7 @@ public class OTPLog extends PanacheEntityBase implements Serializable {
                     resp = 1;
                 }
             }
-            // resp = update("status = 0 where profileCode = ?1 and  otp = ?2 ",mobile,otp);
-             //resp = 1;
-            
+           
         } catch (Exception e) {
        
            e.printStackTrace();

@@ -32,7 +32,15 @@ public record UserProfileRequest(
         @Email 
         String emailAddress, 
         @Min(1) 
-        int userRole)
+        int userRole,
+         @Min(1) 
+        int actionBy,
+        @NotBlank
+        @Email 
+        String actionByStr
+        
+        
+        )
 {
     
   

@@ -187,24 +187,33 @@ public class OTPController {
    @Transactional
    public int doLogOTP(String mobile, String email, String otp, String status)
    {
+       System.out.println(" doLogOTP status = " +   status);
        int resp = ErrorCodes.DATABASE_ERROR;
+       OTPLog  otpLog = null;
        try 
        {
            
-              
+                        
                       OTPLog doLookUp = OTPLog.doLookUp(mobile, email);
-                    
+                      log.info("@@ -@@- doLogOTP doLookUp --  "+doLookUp);
                       //System.out.println(" OTPLog doLookUp = " + doLookUp);
+                      //em.getTransaction().begin();
                       if(doLookUp == null)
                       {
-                            OTPLog  otpLog = new OTPLog();
+                            otpLog = new OTPLog();
                             otpLog.status = status;
                             otpLog.mode = "M";
                             otpLog.otp = otp;
                             otpLog.profileCode = mobile;
                             otpLog.tokenDest = email;//mobile
                             otpLog.createdDate = LocalDateTime.now();
-                            Panache.getEntityManager().merge(otpLog);
+                            em.persist(otpLog);
+                            //OTPLog merge = em.merge(otpLog);
+                            em.flush();
+                            
+                            //OTPLog merge = Panache.getEntityManager().merge(otpLog);
+                            
+                            System.out.println(" @@ merge otpLog = " + otpLog);
                             
                             resp = ErrorCodes.SUCCESSFUL;
                       }
@@ -213,12 +222,16 @@ public class OTPController {
                             doLookUp.updatedDate = LocalDateTime.now();
                             doLookUp.otp = otp;
                             doLookUp.status = OTPStatus.ACTIVE.name();
-                            Panache.getEntityManager().merge(doLookUp);
+                            em.persist(doLookUp);
+                            //OTPLog merge = em.merge(doLookUp);
+                            em.flush();
+                           // Panache.getEntityManager().merge(doLookUp);
                             
                             resp = ErrorCodes.SUCCESSFUL;
                       }
            
-                      
+                     
+                      //.getTransaction().commit();
                 
            
        } 

@@ -23,6 +23,7 @@ public class ErrorCodes {
     
     // INVALID_TOKEN_AGE, INVALID_CUSTOMER_CODE,MAX_NUMBER_OF_API_CLIENTS_EXCEEDED
     
+    public static final int BAD_REQUEST = 400;
     public static final int PARTNER_VALIDATION_ERROR = 602;
     public static final int INVALID_CONTROL_CODE = 603;
     public static final int INVALID_ACTOR = 604;
@@ -223,8 +224,10 @@ public class ErrorCodes {
                 case 202:
                 resp = "input successfully accepted";
                 break;
-                
-                case PARTNER_VALIDATION_ERROR:
+                case BAD_REQUEST:
+                resp = "BAD_REQUEST  [Error code 400]";
+                break;
+                 case PARTNER_VALIDATION_ERROR:
                 resp = "PARTNER_VALIDATION_ERROR  [Error code 602]";
                 break;
                 case INVALID_CONTROL_CODE:
@@ -1365,9 +1368,13 @@ public class ErrorCodes {
                 case 202:
                 resp = "input successfully accepted";
                 break;
+                case BAD_REQUEST:
+                resp = "BAD_REQUEST  [Error code 400]";
+                break;
                 case 401:
                 resp = "Unauthorized Request Ensure your request has the required attributes and you are authorized to use this service  [Error code 401]";
                 break;
+               
                 case EXPIRED_SUBSCRIPTION:
                 resp = "EXPIRED_SUBSCRIPTION  [Error code 607]";
                 break;

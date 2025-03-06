@@ -56,7 +56,7 @@ public class SysData extends PanacheEntityBase implements Serializable {
     //@Temporal(TemporalType.TIMESTAMP)
     public LocalDateTime createdDate;
     @Column(name = "AUTH_BY" , columnDefinition="BigInt(20) default 0")
-    public long authBy;
+    public Long authBy;
     @Column(name = "AUTH_DATE")
     //@Temporal(TemporalType.TIMESTAMP)
     public LocalDateTime authDate;

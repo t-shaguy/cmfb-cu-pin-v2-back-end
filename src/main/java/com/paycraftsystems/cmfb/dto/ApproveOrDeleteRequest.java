@@ -16,7 +16,7 @@ public record ApproveOrDeleteRequest(
         long tid,
         @NotNull
         @Min(1)
-        int actionBy,
+        long actionBy,
         @NotBlank
         @Size(min=1, max=100, message="Action by Str must be valid")
         String actionByStr

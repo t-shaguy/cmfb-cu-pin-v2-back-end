@@ -6,6 +6,7 @@
 package com.paycraftsystems.cmfb.entities;
 
 import com.paycraftsystems.cmfb.dto.PaymentPreviewResponse;
+import com.paycraftsystems.cmfb.dto.PaymentResponse;
 import com.paycraftsystems.cmfb.dto.response.TransactionLogObj;
 import io.quarkus.hibernate.orm.panache.PanacheEntityBase;
 import java.io.Serializable;
@@ -33,15 +34,15 @@ import org.slf4j.LoggerFactory;
 @Table(name="trx_log")
 @NamedQueries({
  @NamedQuery(name=TransactionLog.ALL_TRANSACTIONS,  query="Select p from TransactionLog p where p.createdDate between :from and :to  and p.transTypeStr not in :passed order by p.createdDate desc "),
- @NamedQuery(name=TransactionLog.ALL_TRANSACTIONS_BY_TELLER,  query="Select p from TransactionLog p where p.createdDate between :from and :to  and p.transTypeStr not in :passed and p.createBy = :passed2 order by p.createdDate desc "),
- @NamedQuery(name=TransactionLog.ALL_TRANSACTIONS_COUNT_BY_TELLER,  query="Select count(p) from TransactionLog p where p.createdDate between :from and :to  and p.transTypeStr not in :passed and p.createBy = :passed2 order by p.createdDate desc "),
+ @NamedQuery(name=TransactionLog.ALL_TRANSACTIONS_BY_TELLER,  query="Select p from TransactionLog p where p.createdDate between :from and :to  and p.transTypeStr not in :passed and p.createdBy = :passed2 order by p.createdDate desc "),
+ @NamedQuery(name=TransactionLog.ALL_TRANSACTIONS_COUNT_BY_TELLER,  query="Select count(p) from TransactionLog p where p.createdDate between :from and :to  and p.transTypeStr not in :passed and p.createdBy = :passed2 order by p.createdDate desc "),
  
  @NamedQuery(name=TransactionLog.ALL_TRANSACTIONS_COUNT,  query="Select count(p) from TransactionLog p where p.createdDate between :from and :to  and p.transTypeStr not in :passed order by p.createdDate desc "),
  @NamedQuery(name=TransactionLog.ALL_TRANSACTIONS_PENDING_AUTH,  query="Select p from TransactionLog p where p.createdDate between :from and :to  and p.respCode = '01' and p.transTypeStr not in :passed order by p.createdDate desc "),
  @NamedQuery(name=TransactionLog.ALL_TRANSACTIONS_COUNT_PENDING_AUTH,  query="Select count(p) from TransactionLog p where p.createdDate between :from  and :to and p.respCode = '01' and p.transTypeStr not in :passed order by p.createdDate desc "),
  @NamedQuery(name=TransactionLog.TRANSACTIONS_WITHIN_DATE_AND_ACCOUNT,  query="Select p from TransactionLog p where p.createdDate between :from and :to  and p.transTypeStr like :passed and (p.destAccount = :passed2 or p.destAccount = :passed2) order by p.createdDate desc "),
- @NamedQuery(name=TransactionLog.TRANSACTIONS_WITHIN_DATE_AND_ACCOUNT_BY_TELLER,  query="Select p from TransactionLog p where p.createdDate between :from and :to  and p.transTypeStr like :passed and (p.destAccount = :passed2 or p.destAccount = :passed2) and p.createBy = :passed3 order by p.createdDate desc "),
- @NamedQuery(name=TransactionLog.TRANSACTIONS_WITHIN_DATE_AND_ACCOUNT_COUNT_BY_TELLER,  query="Select count(p) from TransactionLog p where p.createdDate between :from and :to and p.respCode = '01' and p.transTypeStr = 'AUTH_EXTERNAL_FT'  and (p.destAccount = :passed2 or p.destAccount = :passed2) and p.createBy = :passed3 order by p.createdDate desc "),
+ @NamedQuery(name=TransactionLog.TRANSACTIONS_WITHIN_DATE_AND_ACCOUNT_BY_TELLER,  query="Select p from TransactionLog p where p.createdDate between :from and :to  and p.transTypeStr like :passed and (p.destAccount = :passed2 or p.destAccount = :passed2) and p.createdBy = :passed3 order by p.createdDate desc "),
+ @NamedQuery(name=TransactionLog.TRANSACTIONS_WITHIN_DATE_AND_ACCOUNT_COUNT_BY_TELLER,  query="Select count(p) from TransactionLog p where p.createdDate between :from and :to and p.respCode = '01' and p.transTypeStr = 'AUTH_EXTERNAL_FT'  and (p.destAccount = :passed2 or p.destAccount = :passed2) and p.createdBy = :passed3 order by p.createdDate desc "),
  
  @NamedQuery(name=TransactionLog.TRANSACTIONS_WITHIN_DATE_AND_ACCOUNT_COUNT,  query="Select count(p) from TransactionLog p where p.createdDate between :from and :to and p.respCode = '01' and p.transTypeStr = 'AUTH_EXTERNAL_FT'  and (p.destAccount = :passed2 or p.destAccount = :passed2) order by p.createdDate desc "),
  @NamedQuery(name=TransactionLog.TRANSACTIONS_WITHIN_DATE_AND_ACCOUNT_PENDING_AUTH,  query="Select p from TransactionLog p where p.createdDate between :from and :to and p.respCode = '01' and p.transTypeStr = 'AUTH_EXTERNAL_FT' and  (p.destAccount = :passed2 or p.destAccount = :passed2) order by p.createdDate desc "),
@@ -49,15 +50,15 @@ import org.slf4j.LoggerFactory;
  @NamedQuery(name=TransactionLog.TRANSACTIONS_WITHIN_DATE_AND_REQUESTID_PENDING_AUTH,  query="Select p from TransactionLog p where p.createdDate between :from and :to  and p.respCode = '01' and p.transTypeStr = 'AUTH_EXTERNAL_FT'  and p.requestId = :passed2 order by p.createdDate desc "),
  @NamedQuery(name=TransactionLog.TRANSACTIONS_WITHIN_DATE_AND_REQUESTID_PENDING_AUTH_COUNT,  query="Select count(p) from TransactionLog p where p.createdDate between :from and :to  and p.respCode = '01' and p.transTypeStr = 'AUTH_EXTERNAL_FT'  and p.requestId = :passed2 order by p.createdDate desc "),
  @NamedQuery(name=TransactionLog.TRANSACTIONS_WITHIN_DATE_AND_REQUESTID,  query="Select p from TransactionLog p where p.createdDate between :from and :to  and p.transTypeStr like :passed and p.requestId = :passed2 order by p.createdDate desc "),
- @NamedQuery(name=TransactionLog.TRANSACTIONS_WITHIN_DATE_AND_REQUESTID_BY_TELLER,  query="Select p from TransactionLog p where p.createdDate between :from and :to  and p.transTypeStr like :passed and p.requestId = :passed2  and p.createBy = :passed3 order by p.createdDate desc "),
+ @NamedQuery(name=TransactionLog.TRANSACTIONS_WITHIN_DATE_AND_REQUESTID_BY_TELLER,  query="Select p from TransactionLog p where p.createdDate between :from and :to  and p.transTypeStr like :passed and p.requestId = :passed2  and p.createdBy = :passed3 order by p.createdDate desc "),
  
  
  
- @NamedQuery(name=TransactionLog.TRANSACTIONS_WITHIN_DATE_AND_REQUESTID_COUNT_BY_TELLER,  query="Select count(p) from TransactionLog p where p.createdDate between :from and :to and p.transTypeStr like :passed and p.requestId = :passed2 and p.createBy = :passed3 order by p.createdDate desc "),
+ @NamedQuery(name=TransactionLog.TRANSACTIONS_WITHIN_DATE_AND_REQUESTID_COUNT_BY_TELLER,  query="Select count(p) from TransactionLog p where p.createdDate between :from and :to and p.transTypeStr like :passed and p.requestId = :passed2 and p.createdBy = :passed3 order by p.createdDate desc "),
 
  @NamedQuery(name=TransactionLog.TRANSACTIONS_WITHIN_DATE_AND_REQUESTID_COUNT,  query="Select count(p) from TransactionLog p where p.createdDate between :from and :to and p.transTypeStr like :passed and p.requestId = :passed2 order by p.createdDate desc "),
 
-@NamedQuery(name=TransactionLog.TRANSACTIONS_WITHIN_DATE_AND_AMOUNT_BY_TELLER,  query="Select p from TransactionLog p where p.createdDate between :from and :to   and p.transactionAmount = :passed2 and p.transTypeStr like :passed  and p.createBy = :passed3 order by p.createdDate desc "),
+@NamedQuery(name=TransactionLog.TRANSACTIONS_WITHIN_DATE_AND_AMOUNT_BY_TELLER,  query="Select p from TransactionLog p where p.createdDate between :from and :to   and p.transactionAmount = :passed2 and p.transTypeStr like :passed  and p.createdBy = :passed3 order by p.createdDate desc "),
  
  @NamedQuery(name=TransactionLog.TRANSACTIONS_WITHIN_DATE_AND_AMOUNT,  query="Select p from TransactionLog p where p.createdDate between :from and :to   and p.transactionAmount = :passed2 and p.transTypeStr like :passed  order by p.createdDate desc "),
  @NamedQuery(name=TransactionLog.TRANSACTIONS_WITHIN_DATE_AND_AMOUNT_COUNT,  query="Select count(p) from TransactionLog p where p.createdDate between :from and :to and p.transTypeStr like :passed and p.transactionAmount = :passed2 order by p.createdDate desc "),
@@ -70,11 +71,11 @@ import org.slf4j.LoggerFactory;
  //@NamedQuery(name=TransactionLog.TRANSACTIONS_WITHIN_DATE_AND_AMOUNT,  query="Select p from TransactionLog p where p.createdDate between :from and :to   and p.transactionAmount = :passed2 and p.transTypeStr like :passed  order by p.createdDate desc "),
  
 // @NamedQuery(name=TransactionLog.TRANSACTIONS_WITHIN_DATE_AND_AMOUNT_COUNT,  query="Select count(p) from TransactionLog p where p.createdDate between :from and :to  and p.transactionAmount = :passed2 and p.transTypeStr like :passed  order by p.createdDate desc "),
- @NamedQuery(name=TransactionLog.TRANSACTIONS_WITH_GENERIC_SEARCHKEY_BY_TELLER,  query="Select p from TransactionLog p where p.createdDate between :from and :to  and  (p.customerMail like :passed2 or p.customerMobile like :passed2 or p.destAccount like :passed2 or p.destAccount like :passed2  or p.srcAccount like :passed2 or p.srcAccountName like :passed2 or p.destBankName like :passed2) and p.transTypeStr like :passed  and p.createBy = :passed3  order by p.createdDate desc "),
+ @NamedQuery(name=TransactionLog.TRANSACTIONS_WITH_GENERIC_SEARCHKEY_BY_TELLER,  query="Select p from TransactionLog p where p.createdDate between :from and :to  and  (p.customerMail like :passed2 or p.customerMobile like :passed2 or p.destAccount like :passed2 or p.destAccount like :passed2  or p.srcAccount like :passed2 or p.srcAccountName like :passed2 or p.destBankName like :passed2) and p.transTypeStr like :passed  and p.createdBy = :passed3  order by p.createdDate desc "),
  
  @NamedQuery(name=TransactionLog.TRANSACTIONS_WITH_GENERIC_SEARCHKEY,  query="Select p from TransactionLog p where p.createdDate between :from and :to  and  (p.customerMail like :passed2 or p.customerMobile like :passed2 or p.destAccount like :passed2 or p.destAccount like :passed2  or p.srcAccount like :passed2 or p.srcAccountName like :passed2 or p.destBankName like :passed2) and p.transTypeStr like :passed  order by p.createdDate desc "),
  @NamedQuery(name=TransactionLog.TRANSACTIONS_WITH_GENERIC_SEARCHKEY_COUNT,  query="Select count(p) from TransactionLog p where p.createdDate between :from and :to  and (p.customerMail like :passed2 or p.customerMobile like :passed2 or p.destAccount like :passed2 or p.srcAccount like :passed2   or p.srcAccount like :passed2 or p.srcAccountName like :passed2 or p.destBankName like :passed2) and p.transTypeStr like :passed  order by p.createdDate desc "),
- @NamedQuery(name=TransactionLog.TRANSACTIONS_WITH_GENERIC_SEARCHKEY_COUNT_BY_TELLER,  query="Select count(p) from TransactionLog p where p.createdDate between :from and :to  and (p.customerMail like :passed2 or p.customerMobile like :passed2 or p.destAccount like :passed2 or p.srcAccount like :passed2 or p.srcAccount like :passed2 or p.srcAccountName like :passed2 or p.destBankName like :passed2) and p.transTypeStr like :passed  and p.createBy = :passed3 order by p.createdDate desc "),
+ @NamedQuery(name=TransactionLog.TRANSACTIONS_WITH_GENERIC_SEARCHKEY_COUNT_BY_TELLER,  query="Select count(p) from TransactionLog p where p.createdDate between :from and :to  and (p.customerMail like :passed2 or p.customerMobile like :passed2 or p.destAccount like :passed2 or p.srcAccount like :passed2 or p.srcAccount like :passed2 or p.srcAccountName like :passed2 or p.destBankName like :passed2) and p.transTypeStr like :passed  and p.createdBy = :passed3 order by p.createdDate desc "),
  @NamedQuery(name=TransactionLog.TRANSACTIONS_WITH_GENERIC_SEARCHKEY_PENDING_AUTH,  query="Select p from TransactionLog p where p.createdDate between :from and :to  and p.respCode = '01' and p.transTypeStr = 'AUTH_EXTERNAL_FT' and  (p.customerMail like :passed2 or p.customerMobile like :passed2 or p.destAccount like :passed2 or p.destAccount like :passed2  or p.srcAccount like :passed2 or p.srcAccountName like :passed2 or p.destBankName like :passed2) and p.transTypeStr like :passed  order by p.createdDate desc "),
  @NamedQuery(name=TransactionLog.TRANSACTIONS_WITH_GENERIC_SEARCHKEY_PENDING_AUTH_COUNT,  query="Select count(p) from TransactionLog p where p.createdDate between :from and :to  and p.respCode = '01' and p.transTypeStr = 'AUTH_EXTERNAL_FT' and (p.customerMail like :passed2 or p.customerMobile like :passed2 or p.destAccount like :passed2 or p.srcAccount like :passed2 or p.srcAccount like :passed2 or p.srcAccountName like :passed2 or p.destBankName like :passed2) and p.transTypeStr like :passed  order by p.createdDate desc "),
 
@@ -151,8 +152,20 @@ public class TransactionLog  extends PanacheEntityBase implements Serializable{
     @Column(name="resp_code")
     public String respCode;
     
+    @Column(name="custom_response_param_1")
+    public String customResponseParam1;
+    
+    @Column(name="custom_response_param_2")
+    public String customResponseParam2;
+    
+    @Column(name="beneficiary_name")
+    public String beneficiaryName;
+    
+    @Column(name="product_id")
+    public String productId;
+    
     @Column(name="created_by")
-    public long createBy;
+    public long createdBy;
     
     @Column(name="created_by_str")
     public String createByStr;
@@ -225,9 +238,8 @@ public class TransactionLog  extends PanacheEntityBase implements Serializable{
     @Column(name="payer_id")
     public String payerId;
     
-    
-    @Column(name="beneficiary_name")
-    public String beneficiaryName;
+    @Column(name="partner_response_code")
+    public String partnerResponseCode;
     
     @Column(name="transaction_id")
     public String transactionId;
@@ -272,7 +284,7 @@ public class TransactionLog  extends PanacheEntityBase implements Serializable{
     
     public TransactionLogObj toObj() {
         
-        return new TransactionLogObj(this.tid,this.srcAccount, this.destAccount, this.transactionAmount,this.paymentFee,this.respCode,this.createBy,this.createByStr,this.createdDate,this.customerMail,this.customerAddress,this.customerMobile,this.updatedBy,this.updatedByStr, this.authDate,this.authorizedBy,this.authorizedByStr,this.requestStr,this.responseStr,this.transStatus,this.cbaStatus,this.srcBank,this.destBank,this.sourceInstitutionCode,this.transactionReference,this.destBankName,this.payerId,this.transactionId,this.tenantCode,this.transTypeStr,this.paymentCode,this.extResponseCode,this.extResponseDesc,this.trxFee,this.requestId,this.exTransId,this.transDesc,this.paymentReference,this.billerId);
+        return new TransactionLogObj(this.tid,this.srcAccount, this.destAccount, this.transactionAmount,this.paymentFee,this.respCode,this.createdBy,this.createByStr,this.createdDate,this.customerMail,this.customerAddress,this.customerMobile,this.updatedBy,this.updatedByStr, this.authDate,this.authorizedBy,this.authorizedByStr,this.requestStr,this.responseStr,this.transStatus,this.cbaStatus,this.srcBank,this.destBank,this.sourceInstitutionCode,this.transactionReference,this.destBankName,this.payerId,this.transactionId,this.tenantCode,this.transTypeStr,this.paymentCode,this.extResponseCode,this.extResponseDesc,this.trxFee,this.requestId,this.exTransId,this.transDesc,this.paymentReference,this.billerId);
 
     }
     
@@ -280,40 +292,16 @@ public class TransactionLog  extends PanacheEntityBase implements Serializable{
     public PaymentPreviewResponse toPreviewObj() {
         
         
-        return new PaymentPreviewResponse(this.tid, this.trxFee, this.taxAmount,  this.transactionAmount, this.createBy, this.createByStr,this.beneficiaryName,this.customerFullname,this.customerMail,this.customerAddress ,  this.customerMobile, this.payerId, this.partnerResp);
+        return new PaymentPreviewResponse(this.tid, this.trxFee, this.taxAmount,  this.transactionAmount, this.createdBy, this.createByStr,this.beneficiaryName,this.customerFullname,this.customerMail,this.customerAddress ,  this.customerMobile, this.payerId, this.partnerResp);
+    }
+    
+    
+    public PaymentResponse toCUReceiptObj() {
+        
+        return new PaymentResponse(this.tid,  this.transactionAmount, this.createdBy, this.createByStr, this.beneficiaryName,this.customerFullname,this.customerMail,this.customerAddress,  this.customerMobile, this.payerId, this.customResponseParam1, this.customResponseParam2, this.partnerResponseCode !=null && this.partnerResponseCode.trim().equals("1")?"SUCCESSFUL":"FAILED");
+
     }
 
-
-    
-    // @Column(name="error_desc")
-   // public String errorDesc;
-    
-    
-    
-    
-    
-    
-    
-   
-
-   
-    /*
-     JsonObject json = Json.createObjectBuilder().
-                add("destBank",fromJson.getDestBankCode()).
-                add("destAccount", fromJson.getDestAccount()).
-                add("sessionId", fromJson.getRequestId()).
-                add("namedEnqRef", fromJson.getNameEnquiryRequestId()).
-                add("drAccName",  (loadByMobileAndAccountNo.lastName+" "+(loadByMobileAndAccountNo.middleName==null?"":loadByMobileAndAccountNo.middleName)+" "+loadByMobileAndAccountNo.firstName).toUpperCase()).  // add("drAccName", fromJson.getSrcAccountName()).
-                add("srcAccount", fromJson.getSrcAccount()).
-                add("srcBVN",   loadByMobileAndAccountNo.bvn==null?"00000000000":loadByMobileAndAccountNo.bvn.replaceAll("\\+234", "0")).
-                add("crAccountName", fromJson.getBeneficiaryAccountName()).
-                add("destBVN", fromJson.getDestBVN()).
-                add("destKYCLevel", fromJson.getDestKYC()).
-                add("srcKYCLevel", loadByMobileAndAccountNo.kyc==null?"3":loadByMobileAndAccountNo.kyc).
-                add("transDesc", "MBT-"+fromJson.getNarration()).
-                add("amount", fromJson.getAmount().replaceAll(",", "")).
-                add("pin", fromJson.getPin()).
-    */
     
     
  

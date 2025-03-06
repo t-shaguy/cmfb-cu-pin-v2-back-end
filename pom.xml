@@ -36,7 +36,11 @@
             <version>8.10.17</version>
             <type>jar</type>
           </dependency>
-           
+           <dependency>
+            <groupId>io.quarkus</groupId>
+            <artifactId>quarkus-agroal</artifactId>
+            <type>jar</type>
+           </dependency>
             <dependency>
         <groupId>io.quarkus</groupId>
         <artifactId>quarkus-resteasy-reactive</artifactId>
@@ -143,9 +147,13 @@
             <artifactId>quarkus-rest-client-reactive-jackson</artifactId>
         </dependency>
    
-    <dependency>
+    <!--dependency>
               <groupId>io.quarkus</groupId>
                <artifactId>quarkus-jdbc-mariadb</artifactId>
+    </dependency-->
+    <dependency>
+              <groupId>io.quarkus</groupId>
+               <artifactId>quarkus-jdbc-mysql</artifactId>
     </dependency>
     <dependency>
         <groupId>io.quarkus</groupId>
@@ -240,6 +248,18 @@
             <groupId>commons-io</groupId>
             <artifactId>commons-io</artifactId>
             <version>2.18.0</version>
+            <type>jar</type>
+        </dependency>
+        <dependency>
+            <groupId>io.smallrye.reactive</groupId>
+            <artifactId>smallrye-reactive-messaging-api</artifactId>
+            <version>4.21.0</version>
+            <type>jar</type>
+        </dependency>
+        <dependency>
+            <groupId>org.eclipse.persistence</groupId>
+            <artifactId>org.eclipse.persistence.core</artifactId>
+            <version>2.7.9</version>
             <type>jar</type>
         </dependency>
     </dependencies>

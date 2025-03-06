@@ -7,6 +7,7 @@ package com.paycraftsystems.cmfb.boundary;
 import com.paycraftsystems.cmfb.controller.PaymentsController;
 import com.paycraftsystems.cmfb.controller.SysDataController;
 import com.paycraftsystems.cmfb.dto.ApproveOrDeleteRequest;
+import com.paycraftsystems.cmfb.dto.CompletePaymentRequest;
 import com.paycraftsystems.cmfb.dto.FilterRequest;
 import com.paycraftsystems.cmfb.dto.InitPaymentRequest;
 import com.paycraftsystems.cmfb.dto.PaymentSetupEditRequest;
@@ -109,6 +110,17 @@ public class PaymentsResource implements Serializable {
         log.info("- doVerifyPayeeUSX -- "+json);
        
        return  payments.doInitPayment(json);
+           
+    }
+    
+    
+    @POST
+    @Path("make-payment")
+    @JWTTokenNeeded
+    public PaymentProcessResponse doCompletePaymentUSX(@Valid CompletePaymentRequest json) {
+        log.info("- doCompletePaymentUSX -- "+json);
+       
+       return  payments.doCompletePayment(json);
            
     }
     

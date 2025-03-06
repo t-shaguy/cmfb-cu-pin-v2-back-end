@@ -6,10 +6,12 @@ package com.paycraftsystems.cmfb.repositories;
 
 import com.paycraftsystems.cmfb.controller.ESEQRepository;
 import com.paycraftsystems.cmfb.dto.InitPaymentRequest;
+import com.paycraftsystems.cmfb.dto.response.MakePaymentResponse;
 import com.paycraftsystems.cmfb.dto.response.ValidateCheckResponse;
 import com.paycraftsystems.cmfb.entities.TransactionLog;
 import com.paycraftsystems.cmfb.resources.ResourceHelper;
 import io.quarkus.hibernate.orm.panache.Panache;
+import io.quarkus.hibernate.orm.panache.PanacheQuery;
 import io.quarkus.hibernate.orm.panache.PanacheRepository;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
@@ -56,6 +58,26 @@ public class TransLogRepository  implements  PanacheRepository<TransactionLog> {
             throw new Exception(e);
         }
      
+    }
+     
+    public PanacheQuery<TransactionLog> findByParams(String status, LocalDateTime from, LocalDateTime today){
+       return TransactionLog.find("transStatus = ?1 and createdDate between ?2 and ?3 order by createdDate desc", status, from, today);
+    }
+    
+    public PanacheQuery<TransactionLog> findByParams(String status,  LocalDateTime from, LocalDateTime today, String searchKey){
+       return TransactionLog.find("transStatus = ?1 and createdDate between ?2 and ?3 and (paymentDesc like ?4 or  productId like ?4 or beneficiaryName like ?4) order by createdDate desc", status, from, today, searchKey+'%');
+    }
+    
+    public PanacheQuery<TransactionLog> findByParams(LocalDateTime from, LocalDateTime today){
+       return TransactionLog.find("createdDate between ?1 and ?2 order by createdDate desc",from, today);
+    }
+    
+    public PanacheQuery<TransactionLog> findByParams(LocalDateTime from, LocalDateTime today, String searchKey){
+       return TransactionLog.find("createdDate between ?1 and ?2 and (paymentDesc like ?4 or  productId like ?4  or  beneficiaryName like ?4 ) order by createdDate desc",from, today, searchKey+'%');
+    }
+    
+    public PanacheQuery<TransactionLog> findByParams(LocalDateTime from, LocalDateTime today, String searchKey, long tellerId){
+       return TransactionLog.find("createdDate between ?1 and ?2 and (paymentDesc like ?4 or  productId like ?4  or  beneficiaryName like ?4)  and  createBy = ?5 order by createdDate desc",from, today, searchKey+'%', tellerId);
     }
     
    public   TransactionLog doLookupApprovalTransaction(@Valid String requestId, String transType) throws Exception {
@@ -133,6 +155,8 @@ public class TransLogRepository  implements  PanacheRepository<TransactionLog> {
      return todaysTotal;
     }
     
+    
+    
     @Transactional
     public static TransactionLog doSync(TransactionLog log, boolean exceedsLimit) throws Exception {
         
@@ -151,7 +175,7 @@ public class TransLogRepository  implements  PanacheRepository<TransactionLog> {
     
     
     @Transactional
-    public  TransactionLog doLog(InitPaymentRequest pay, String transDesc) throws Exception {
+    public  TransactionLog doLog(InitPaymentRequest pay, String transDesc, String beneficiaryName, String productId) throws Exception {
         
         TransactionLog obj = null;// new Te;
         String padda = "";
@@ -165,7 +189,9 @@ public class TransLogRepository  implements  PanacheRepository<TransactionLog> {
             obj.transactionId = eseqRepository.genCode(padZero, 10);
             obj.createdDate = LocalDateTime.now();
             obj.customerAddress = pay.payeeAddress();
-            obj.createBy = pay.actionBy();
+            obj.beneficiaryName = beneficiaryName;
+            obj.productId  = productId;
+            obj.createdBy = pay.actionBy();
             obj.createByStr = pay.actionByStr();
             obj.transactionAmount = pay.amount();
             obj.customerMail = pay.payeeEmail();
@@ -173,7 +199,7 @@ public class TransLogRepository  implements  PanacheRepository<TransactionLog> {
             obj.payerId = pay.payeeId();
             obj.paymentFee = pay.fee();
             obj.taxAmount = pay.taxAmount();
-            
+            //obj.transStatus = status;
             obj.transDesc = transDesc;
             obj.customerFullname = pay.doPayeeName();
             obj.trxFee = pay.fee();
@@ -193,7 +219,7 @@ public class TransLogRepository  implements  PanacheRepository<TransactionLog> {
     
     
     @Transactional
-    public  TransactionLog doSync(TransactionLog tlog, ValidateCheckResponse resp) throws Exception {
+    public  TransactionLog doSync(TransactionLog tlog, ValidateCheckResponse resp, String status) throws Exception {
         
         TransactionLog obj = null;// new Te;
         String padda = "";
@@ -212,6 +238,7 @@ public class TransLogRepository  implements  PanacheRepository<TransactionLog> {
                     doLookupById.destAccount = (resp.payparameter() !=null && resp.payparameter().accountsettlement() !=null)?resp.payparameter().accountsettlement().accountnumber1():"NA";
                     doLookupById.destAccount2 = (resp.payparameter() !=null && resp.payparameter().accountsettlement() !=null)?resp.payparameter().accountsettlement().accountnumber2():"NA";
                     doLookupById.responseStr = resp.toString();
+                    doLookupById.transStatus = status;
                     doLookupById.partnerResp = resp.payparameter().responsename();
 
                    obj = Panache.getEntityManager().merge(doLookupById);
@@ -230,4 +257,41 @@ public class TransLogRepository  implements  PanacheRepository<TransactionLog> {
       return obj;
     }
     
+    
+     @Transactional
+    public  TransactionLog doSyncPayment(long tid, MakePaymentResponse resp) throws Exception {
+        
+        TransactionLog obj = null;// new Te;
+        String padda = "";
+        
+        ResourceHelper rh = new ResourceHelper();
+        try 
+        {
+            if(tid > 0)
+            {
+                TransactionLog doLookupById = doLookupById(tid);
+
+                if(doLookupById != null)
+                {
+                    doLookupById.updatedDate = LocalDateTime.now();
+                    doLookupById.customResponseParam1 =  (resp.payparameter() !=null)?resp.payparameter().receiptno():"NA";
+                    doLookupById.customResponseParam2 = (resp.payparameter() !=null && resp.payparameter().pinno() !=null)?resp.payparameter().pinno():"NA";
+                    //doLookupById.responseStr = resp.toString();
+                    //doLookupById.partnerResp = resp.payparameter().responsename();
+
+                   obj = Panache.getEntityManager().merge(doLookupById);
+                }
+                
+            }
+           
+            
+        } 
+        catch (Exception e) {
+       
+            log.error("Exception e doSync",e);
+            throw new Exception(e);
+        }
+        
+      return obj;
+    }
 }

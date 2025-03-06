@@ -56,7 +56,7 @@ public class PaymentsRepository implements  PanacheRepository<PaymentSetup> {
     
     public PaymentSetup doLookUpByName(String paymentDesc, String provider) {
      log.info("obj = " + paymentDesc+" provider : "+provider); 
-     return find("paymentDesc = ?1 and providerName = ?2 ", paymentDesc, provider).firstResult();
+     return find("paymentDesc = ?1 and beneficiaryName = ?2 ", paymentDesc, provider).firstResult();
     
     }
     
@@ -80,7 +80,7 @@ public class PaymentsRepository implements  PanacheRepository<PaymentSetup> {
     }
     
     public PanacheQuery<PaymentSetup> findByParams(String status,  LocalDateTime from, LocalDateTime today, String searchKey){
-       return PaymentSetup.find("status = ?1 and createdDate between ?2 and ?3 and (paymentDesc like ?4 or  productId like ?4 or providerName like ?4) order by createdDate desc", status, from, today, searchKey+'%');
+       return PaymentSetup.find("status = ?1 and createdDate between ?2 and ?3 and (paymentDesc like ?4 or  productId like ?4 or beneficiaryName like ?4) order by createdDate desc", status, from, today, searchKey+'%');
     }
     
     public PanacheQuery<PaymentSetup> findByParams(LocalDateTime from, LocalDateTime today){
@@ -88,7 +88,7 @@ public class PaymentsRepository implements  PanacheRepository<PaymentSetup> {
     }
     
     public PanacheQuery<PaymentSetup> findByParams(LocalDateTime from, LocalDateTime today, String searchKey){
-       return PaymentSetup.find("createdDate between ?1 and ?2 and (paymentDesc like ?4 or  productId like ?4  or  providerName like ?4 ) order by createdDate desc",from, today, searchKey+'%');
+       return PaymentSetup.find("createdDate between ?1 and ?2 and (paymentDesc like ?4 or  productId like ?4  or  beneficiaryName like ?4 ) order by createdDate desc",from, today, searchKey+'%');
     }
     
     /*
@@ -135,7 +135,10 @@ public class PaymentsRepository implements  PanacheRepository<PaymentSetup> {
                 //obj.providerName = request.providerName;
                 obj.includeTax  = request.includeTax;
                 obj.tax_amount = request.taxAmount;
-                obj.amountFixed = request.amountFixed;
+                obj.paymentAccount  = request.paymentCollectionAccount;
+                obj.paymentCollectionAccountName = request.paymentCollectionAccountName;
+                obj.amountFixed = request.amountFixed==null?false: request.amountFixed;
+                obj.includeTax = request.includeTax==null?false: request.includeTax;
                 obj.min_amount = request.min_amount;
                 obj.createdDate = LocalDateTime.now();
                 obj.status = ResourceStatusEnum.INACTIVE.name();
@@ -175,9 +178,9 @@ public class PaymentsRepository implements  PanacheRepository<PaymentSetup> {
                 //obj.providerName = request.providerName;
                 ps.beneficiaryId = doLookUpById.tid;
                 ps.beneficiaryName = doLookUpById.beneficiaryName;
-                ps.includeTax  = request.includeTax;
+                ps.includeTax  = obj.includeTax = request.includeTax==null?false: request.includeTax;
                 ps.tax_amount = request.taxAmount;
-                ps.amountFixed = request.amountFixed;
+                ps.amountFixed = obj.amountFixed = request.amountFixed==null?false: request.amountFixed;;
                 ps.min_amount = request.min_amount;
                 ps.updatedDate = LocalDateTime.now();
                 ps.status = ResourceStatusEnum.INACTIVE.name();

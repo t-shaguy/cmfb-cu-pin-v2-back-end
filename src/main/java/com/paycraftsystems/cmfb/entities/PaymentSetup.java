@@ -52,6 +52,9 @@ public class PaymentSetup extends PanacheEntityBase implements Serializable
     @Column(name="amount")
     public double amount;
     
+    @Column(name="fee")
+    public double fee;
+    
     @Column(name="status")
     public String status;
     
@@ -64,6 +67,12 @@ public class PaymentSetup extends PanacheEntityBase implements Serializable
     
     @Column(name="beneficiary_name")
     public String beneficiaryName;
+    
+    @Column(name="payment_collection_account")
+    public String paymentAccount;
+    
+    @Column(name="payment_collection_account_name")
+    public String paymentCollectionAccountName;
     
     @Column(name="created_by_str")
     public String createdByStr;
@@ -112,6 +121,8 @@ public class PaymentSetup extends PanacheEntityBase implements Serializable
                .add("amount", rh.toDefault(this.amount))
                .add("productId", rh.toDefault(this.productId))
                .add("paymentDesc", rh.toDefault(this.paymentDesc))
+               .add("paymentAccount", rh.toDefault(this.paymentAccount))
+               .add("paymentCollectionAccountName", rh.toDefault(this.paymentCollectionAccountName))
                .add("status", rh.toDefault(this.status))
                .add("beneficiaryId", rh.toDefault(this.beneficiaryId))
                .add("beneficiaryName", rh.toDefault(this.beneficiaryName))
@@ -145,6 +156,8 @@ public class PaymentSetup extends PanacheEntityBase implements Serializable
             job.add("tid", this.tid)
                .add("amount", rh.toDefault(this.amount))
                .add("productId", rh.toDefault(this.productId))
+               .add("paymentAccount", rh.toDefault(this.paymentAccount))
+               .add("paymentCollectionAccountName", rh.toDefault(this.paymentCollectionAccountName))
                .add("paymentDesc", rh.toDefault(this.paymentDesc))
                .add("status", rh.toDefault(this.status))
                .add("beneficiaryId", rh.toDefault(this.beneficiaryId))

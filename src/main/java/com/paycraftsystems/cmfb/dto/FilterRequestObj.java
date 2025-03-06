@@ -20,6 +20,8 @@ public class FilterRequestObj
             this.status = rx.status();
             this.pageId = rx.pageId();
             this.pageSize = rx.pageSize();
+            this.actionBy = rx.actionBy();
+            this.actionByStr = rx.actionByStr();
            
        }
     
@@ -30,5 +32,7 @@ public class FilterRequestObj
         public String status;
         public int pageId;
         public int pageSize;
+        public long actionBy;
+        public String actionByStr;
   
 }

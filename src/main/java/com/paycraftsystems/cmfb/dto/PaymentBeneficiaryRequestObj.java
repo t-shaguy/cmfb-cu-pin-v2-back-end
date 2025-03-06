@@ -26,11 +26,17 @@ public class PaymentBeneficiaryRequestObj
         this.beneficiaryContactPersonMobile= rx.beneficiaryContactPersonMobile();
         this.actionBy= rx.actionBy();
         this.actionByStr= rx.actionByStr();
+        //this.beneficiaryCollectionAccount = rx.beneficiaryCollectionAccount();
+        //this.beneficiaryCollectionAccountName = rx.beneficiaryCollectionAccountName();
 
      }
    
     public String beneficiaryDesc;
     public String beneficiaryName;
+    public String paymentCollectionAccount;
+    public String paymentCollectionAccountName;
+    //public String beneficiaryCollectionAccountName;
+    //public String beneficiaryCollectionAccount;
     public String beneficiaryAddress;
     public String beneficiaryContactPersonName;
     public String beneficiaryContactPersonEmail;

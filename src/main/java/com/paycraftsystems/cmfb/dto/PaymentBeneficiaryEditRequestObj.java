@@ -27,9 +27,13 @@ public class PaymentBeneficiaryEditRequestObj
         this.actionBy= rx.actionBy();
         this.actionByStr= rx.actionByStr();
         this.tid = rx.tid();
+        this.beneficiaryCollectionAccount = rx.beneficiaryCollectionAccount();
+        this.beneficiaryCollectionAccountName = rx.beneficiaryCollectionAccountName();
 
      }
    
+    public String beneficiaryCollectionAccount;
+    public String beneficiaryCollectionAccountName;
     public long tid;
     public String beneficiaryDesc;
     public String beneficiaryName;

@@ -19,9 +19,14 @@ import jakarta.inject.Inject;
 import io.quarkus.mailer.Mailer;
 
 import io.quarkus.mailer.reactive.ReactiveMailer;
+import io.smallrye.reactive.messaging.annotations.Blocking;
 import java.text.DecimalFormat;
-import java.time.format.DateTimeFormatter;
 import jakarta.annotation.PostConstruct;
+import static java.lang.Math.log;
+import java.util.ArrayList;
+import java.util.List;
+import lombok.extern.slf4j.Slf4j;
+import org.eclipse.microprofile.reactive.messaging.Incoming;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -32,14 +37,13 @@ import org.slf4j.LoggerFactory;
  */
 
 @ApplicationScoped
+@Slf4j
 public class MailProcessor {
     
-    private static Logger  LOGGER = LoggerFactory.getLogger(MailProcessor.class);
+    
     
     @Inject
     SysDataController sysDataHelper;
-    
-    
     
    
     @PostConstruct
@@ -58,7 +62,7 @@ public class MailProcessor {
   
     
      public CompletionStage<Boolean> sendWelcomeEmailAsync(NotificationsFeed  feedObj) {
-        LOGGER.info(" *** called async mailer sendWelcomeEmailAsync...... ");
+        log.info(" *** called async mailer sendWelcomeEmailAsync...... ");
         
          try 
          {
@@ -96,7 +100,7 @@ public class MailProcessor {
          } 
          catch (Exception e) {
         
-             LOGGER.error(" $ Exception in sendMailAsync ",e);
+             log.error(" $ Exception in sendMailAsync ",e);
              
              
              return null;
@@ -104,6 +108,35 @@ public class MailProcessor {
          
          }
           
+    }
+     
+     
+     @Incoming("payment-notifications")
+    @Blocking
+    public  boolean doPaymentNotificationMail(String payload) {
+        log.info(" doOTPMail-- otp-- doPaymentNotificationMail "+payload);
+        //MailResponse doEmail = null;
+        String addressee; List<String> email= new ArrayList<>(); String otp;
+        try 
+        {
+                 
+            String[] split = payload.split("#");
+            email.add(split[1]);
+            // EmailNotificationRequest emailNotificationRequest = new EmailNotificationRequest(sysDataRepo.doLookUpByNameStr("OTP-SIGNUP", ""), "", doOTPMailHtmlStr, email.toArray(new String[0]), true, "EMAIL", sysDataRepo.doLookUpByNameStr("MAIL-PROVIDER", ""));
+           
+           // EmailNotificationRequest emailNotificationRequest = new EmailNotificationRequest(split[3], "", doOTPMailHtmlStr, email.toArray(new String[0]), true, "EMAIL", split[4]);
+           // log.info("== emailNotificationRequest == "+emailNotificationRequest);
+           // doEmail = hoptoolNotificationService.doEmail(emailNotificationRequest);
+            
+           // log.info("--doOTPMail "+doEmail);
+            
+        } catch (Exception e) {
+            
+            e.printStackTrace();
+        }
+        
+        
+       return  false;//(doEmail !=null && doEmail.statusCode().equals("00"))?true:false;
     }
      
     /*
@@ -132,7 +165,7 @@ public class MailProcessor {
          } 
          catch (Exception e) {
         
-             LOGGER.error(" $ Exception in sendMailAsync ",e);
+             log.error(" $ Exception in sendMailAsync ",e);
              
              
              return null;
@@ -144,7 +177,7 @@ public class MailProcessor {
      */
      
     public CompletionStage<Boolean> sendOTPEmailAsync(NotificationsFeed  feedObj) {
-        LOGGER.info(" *** called async mailer sendOTPEmailAsync...... ");
+        log.info(" *** called async mailer sendOTPEmailAsync...... ");
         
          try 
          {
@@ -166,7 +199,7 @@ public class MailProcessor {
                 mail.tableBorderColor = sysDataHelper.getProps("MAIL-TABLE-BORDER-COLOR", "NA");
                 
                         
-                LOGGER.info(" ##-sendOTPEmailAsync- MailObj -- "+mail);
+                log.info(" ##-sendOTPEmailAsync- MailObj -- "+mail);
         
         return reactiveMailer.send(
                
@@ -187,7 +220,7 @@ public class MailProcessor {
              
             // e.printStackTrace();
         
-             LOGGER.error(" $ Exception in sendMailAsync ",e);
+             log.error(" $ Exception in sendMailAsync ",e);
              
              
              return null;
@@ -198,7 +231,7 @@ public class MailProcessor {
     }
     
     public CompletionStage<Boolean> sendResetEmailAsync(NotificationsFeed  feedObj) {
-        LOGGER.info(" *** called async mailer sendResetEmailAsync...... ");
+        log.info(" *** called async mailer sendResetEmailAsync...... ");
         
          try 
          {
@@ -221,7 +254,7 @@ public class MailProcessor {
                 mail.tableBorderColor = sysDataHelper.getProps("MAIL-TABLE-BORDER-COLOR", "NA");
                 
                         
-                LOGGER.info(" ##--sendResetEmailAsync MailObj -- "+mail);
+                log.info(" ##--sendResetEmailAsync MailObj -- "+mail);
         
         return reactiveMailer.send(
                
@@ -236,7 +269,7 @@ public class MailProcessor {
              
             // e.printStackTrace();
         
-             LOGGER.error(" $ Exception in sendResetEmailAsync ",e);
+             log.error(" $ Exception in sendResetEmailAsync ",e);
              
              
              return null;
@@ -247,7 +280,7 @@ public class MailProcessor {
     }
     
     public CompletionStage<Boolean> sendCustomerWelcomeEmailAsync(NotificationsFeed  feedObj) {
-        LOGGER.info(" *** called async mailer sendCustomerWelcomeEmailAsync...... ");
+        log.info(" *** called async mailer sendCustomerWelcomeEmailAsync...... ");
         
          try 
          {
@@ -270,7 +303,7 @@ public class MailProcessor {
                 mail.tableHDColor = sysDataHelper.getProps("MAIL-TABLE-HD-COLOR", "NA");
                 mail.tableBorderColor = sysDataHelper.getProps("MAIL-TABLE-BORDER-COLOR", "NA");
                     
-                LOGGER.info(" ##-- sendCustomerWelcomeEmailAsync MailObj -- "+mail);
+                log.info(" ##-- sendCustomerWelcomeEmailAsync MailObj -- "+mail);
         
         return reactiveMailer.send(
                
@@ -285,7 +318,7 @@ public class MailProcessor {
              
             // e.printStackTrace();
         
-             LOGGER.error(" $ Exception in sendCustomerWelcomeEmailAsync ",e);
+             log.error(" $ Exception in sendCustomerWelcomeEmailAsync ",e);
              
              
              return null;
@@ -296,7 +329,7 @@ public class MailProcessor {
     }
     
     public CompletionStage<Boolean> sendAdminWelcomeEmailAsync(NotificationRequest  feedObj) {
-        LOGGER.info(" *** called async mailer sendAdminWelcomeEmailAsync...... ");
+        log.info(" *** called async mailer sendAdminWelcomeEmailAsync...... ");
         
          try 
          {
@@ -319,7 +352,7 @@ public class MailProcessor {
                 mail.tableHDColor = sysDataHelper.getProps("MAIL-TABLE-HD-COLOR", "NA");
                 mail.tableBorderColor = sysDataHelper.getProps("MAIL-TABLE-BORDER-COLOR", "NA");
                     
-                LOGGER.info(" ##-- sendCustomerWelcomeEmailAsync MailObj -- "+mail);
+                log.info(" ##-- sendCustomerWelcomeEmailAsync MailObj -- "+mail);
         
         return reactiveMailer.send( Mail.withHtml(mail.mailTo, mail.subject, new MailTemplates().doAdminWelcomeMail(mail)),
                 Mail.withHtml(mail.cc,mail.subject, new MailTemplates().doAdminWelcomeMail(mail)))
@@ -330,14 +363,14 @@ public class MailProcessor {
          } 
          catch (Exception e) {
            
-             LOGGER.error(" $ Exception in sendCustomerWelcomeEmailAsync ",e);
+             log.error(" $ Exception in sendCustomerWelcomeEmailAsync ",e);
              return null;
          }
           
     }
     
     public CompletionStage<Boolean> sendOTPEmailAsync(NotificationRequest  feedObj) {
-        LOGGER.info(" *** called async mailer sendOTPEmailAsync...... ");
+        log.info(" *** called async mailer sendOTPEmailAsync...... ");
         
          try 
          {
@@ -360,7 +393,7 @@ public class MailProcessor {
                 mail.tableHDColor = sysDataHelper.getProps("MAIL-TABLE-HD-COLOR", "NA");
                 mail.tableBorderColor = sysDataHelper.getProps("MAIL-TABLE-BORDER-COLOR", "NA");
                     
-                LOGGER.info(" ##-- sendCustomerWelcomeEmailAsync MailObj -- "+mail);
+                log.info(" ##-- sendCustomerWelcomeEmailAsync MailObj -- "+mail);
         
         return reactiveMailer.send(
                
@@ -371,14 +404,14 @@ public class MailProcessor {
          } 
          catch (Exception e) {
            
-             LOGGER.error(" $ Exception in sendCustomerWelcomeEmailAsync ",e);
+             log.error(" $ Exception in sendCustomerWelcomeEmailAsync ",e);
              return null;
          }
           
     }
     
     public CompletionStage<Boolean> sendAdminWelcomeEmailAsync(NotificationsFeed  feedObj) {
-        LOGGER.info(" *** called async mailer sendAdminWelcomeEmailAsync...... ");
+        log.info(" *** called async mailer sendAdminWelcomeEmailAsync...... ");
         
          try 
          {
@@ -401,7 +434,7 @@ public class MailProcessor {
                 mail.tableHDColor = sysDataHelper.getProps("MAIL-TABLE-HD-COLOR", "NA");
                 mail.tableBorderColor = sysDataHelper.getProps("MAIL-TABLE-BORDER-COLOR", "NA");
                     
-                LOGGER.info(" ##-- sendCustomerWelcomeEmailAsync MailObj -- "+mail);
+                log.info(" ##-- sendCustomerWelcomeEmailAsync MailObj -- "+mail);
         
         return reactiveMailer.send(
                
@@ -414,7 +447,7 @@ public class MailProcessor {
          } 
          catch (Exception e) {
            
-             LOGGER.error(" $ Exception in sendCustomerWelcomeEmailAsync ",e);
+             log.error(" $ Exception in sendCustomerWelcomeEmailAsync ",e);
              
              
              return null;
@@ -456,10 +489,10 @@ public class MailProcessor {
         
              e.printStackTrace();
              
-             LOGGER.info("-#- Exception error sendingMail -sending params  payeeInfo -- "+payeeInfo);
-             LOGGER.info("-#- Exception error sendingMail -sending params  CUResponseObj -- "+CUResponseObj);
+             log.info("-#- Exception error sendingMail -sending params  payeeInfo -- "+payeeInfo);
+             log.info("-#- Exception error sendingMail -sending params  CUResponseObj -- "+CUResponseObj);
              
-             LOGGER.error(" # Exception in Sending Mail  -- ",e);
+             log.error(" # Exception in Sending Mail  -- ",e);
          
          }
        return sent;

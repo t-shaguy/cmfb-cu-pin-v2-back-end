@@ -21,6 +21,6 @@ public class ApproveOrDeleteRequestObj
         
        
         public long tid;
-        public int actionBy;
+        public long actionBy;
         public String actionByStr;
 }

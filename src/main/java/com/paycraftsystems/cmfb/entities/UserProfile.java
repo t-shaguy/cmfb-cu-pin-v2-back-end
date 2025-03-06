@@ -19,6 +19,7 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
+import lombok.extern.slf4j.Slf4j;
 //import jakarta.transaction.Transactional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -30,10 +31,9 @@ import org.slf4j.LoggerFactory;
 
 @Entity
 @Table(name="user_profile")
+//@Slf4j
 public class UserProfile extends PanacheEntityBase implements Serializable{
-    
-   private static  Logger LOGGER =  LoggerFactory.getLogger(UserProfile.class);
-    
+  
     
     @Id
     @GeneratedValue(strategy=GenerationType.IDENTITY)
@@ -77,7 +77,7 @@ public class UserProfile extends PanacheEntityBase implements Serializable{
     public String emailAddress;
     
   
-    @Column(name="til_account")
+    @Column(name="till_account")
     public String tilAccount;
     
    
@@ -210,9 +210,9 @@ public class UserProfile extends PanacheEntityBase implements Serializable{
             
         } catch (Exception e) {
         
-              ///e.printStackTrace();
+              e.printStackTrace();
             
-              LOGGER.error(" loadByParams --  Exception - ",e);
+             // LOGGER.error(" loadByParams --  Exception - ",e);
         }
         
       return obj;

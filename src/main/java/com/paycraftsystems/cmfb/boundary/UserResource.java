@@ -5,6 +5,7 @@
 package com.paycraftsystems.cmfb.boundary;
 
 
+import com.paycraftsystems.cmfb.controller.ProfilesController;
 import com.paycraftsystems.cmfb.controller.UserController;
 import com.paycraftsystems.cmfb.dto.ChangePasswordRequest;
 import com.paycraftsystems.cmfb.dto.FilterRequest;
@@ -20,7 +21,10 @@ import com.paycraftsystems.cmfb.dto.response.ForcePasswordChangeResponse;
 import com.paycraftsystems.cmfb.dto.response.GenericResponse;
 import com.paycraftsystems.cmfb.dto.response.ManagedLoginResponseV2;
 import com.paycraftsystems.cmfb.dto.response.ResendOTPResponse;
+import com.paycraftsystems.cmfb.dto.response.UserLogResponse;
 import com.paycraftsystems.cmfb.dto.response.UserProfileResponse;
+import com.paycraftsystems.cmfb.entities.ProfileSetup;
+import com.paycraftsystems.cmfb.repositories.ProfilesRepository;
 import io.smallrye.common.constraint.NotNull;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
@@ -56,6 +60,12 @@ public class UserResource implements Serializable {
     @Inject
     UserController userController;
     
+    @Inject
+    ProfilesRepository profilesRepo;
+    
+    @Inject
+    ProfilesController profilescontro;
+    
    // @Inject
    // EntityManager em;
     
@@ -67,6 +77,47 @@ public class UserResource implements Serializable {
         
       return userController.doResendOTPAdmin(request);
     }
+    
+    @POST
+    @Path("/create-profile-2")
+    //@JWTTokenNeeded
+    public UserLogResponse doCreateProfileXOXV2(@Valid final UserProfileRequest  request) {
+    
+       return userController.doCreateProfileXOXV2(request);
+        
+    }
+    
+    
+    @POST
+    @Path("/create-profile-3")
+    //@JWTTokenNeeded
+    public UserLogResponse doCreateProfileXOXV2XXX(@Valid final UserProfileRequest  request) {
+    
+       return userController.doCreateProfileXOXV2XXX(request);
+        
+    }
+    
+    @POST
+    @Path("/create-profile-x")
+    //@JWTTokenNeeded
+    public ProfileSetup doCreateProfileXOXV2XXQQQ(@Valid final UserProfileRequest  request) throws Exception {
+    
+       return profilesRepo.doLog(request);
+        
+    }
+    
+    @POST
+    @Path("/create-profile-xx")
+    //@JWTTokenNeeded
+    public UserLogResponse doCreateProfileXOXV2XXQQQP(@Valid final UserProfileRequest  request) throws Exception {
+    
+       return profilescontro.doCreate(request);
+        
+    }
+    
+    
+    
+    
     
     @POST
     @Path("/create-profile")

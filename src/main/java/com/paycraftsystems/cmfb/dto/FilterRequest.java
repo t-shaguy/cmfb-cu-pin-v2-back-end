@@ -28,6 +28,11 @@ public record FilterRequest(
         int pageId,
         @NotNull
         @Min(1)
-        int pageSize
+        int pageSize,
+        @Min(1)
+        long actionBy,
+        @NotBlank
+        @Size(min=3, message="Action by String must be supplied")
+        String actionByStr
         ) {
 }

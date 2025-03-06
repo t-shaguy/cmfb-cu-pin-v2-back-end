@@ -48,6 +48,7 @@ public class PaymentBeneficiarySetup extends PanacheEntityBase implements Serial
     
    @Column(name="beneficiary_contact_person_mobile")
     public String beneficiaryContactPersonMobile;
+  
     
     @Column(name="status")
     public String status;

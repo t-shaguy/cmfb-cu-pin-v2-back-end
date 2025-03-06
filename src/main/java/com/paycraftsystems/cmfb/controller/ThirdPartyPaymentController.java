@@ -5,7 +5,9 @@
 package com.paycraftsystems.cmfb.controller;
 
 import com.paycraftsystems.cmfb.dto.InitPaymentRequest;
+import com.paycraftsystems.cmfb.dto.MakePaymentRequest;
 import com.paycraftsystems.cmfb.dto.OtherPaymentParams;
+import com.paycraftsystems.cmfb.dto.response.MakePaymentResponse;
 import com.paycraftsystems.cmfb.dto.response.ValidateCheckResponse;
 import com.paycraftsystems.cmfb.services.CUService;
 import com.paycraftsystems.cu.dto.VerifyPaymentRequest;
@@ -39,6 +41,29 @@ public class ThirdPartyPaymentController {
             log.info(" -- doInitiateCUPayment ");
             
             doValidityCheck = cuservice.doValidityCheck(verifyPaymentRequest);
+            
+            
+        } catch (Exception e) {
+            
+            e.printStackTrace();
+            
+            log.error("Exception @ doInitiateCUPayment ",e);
+        }
+        
+       return doValidityCheck;
+    }
+    
+    public MakePaymentResponse doCompleteCUPayment(String code)
+    {   
+        MakePaymentResponse doValidityCheck  = null;
+        try 
+        {
+            //BCrypt.hashpw(CU_PASSWORD, BCrypt.gensalt(12))
+            MakePaymentRequest verifyPaymentRequest = new MakePaymentRequest(code);
+            
+            log.info(" -- doInitiateCUPayment ");
+            
+            doValidityCheck = cuservice.doMakepayment(verifyPaymentRequest);
             
             
         } catch (Exception e) {

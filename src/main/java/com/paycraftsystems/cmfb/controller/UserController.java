@@ -39,16 +39,18 @@ import com.paycraftsystems.cmfb.dto.response.InvalidRequestResponseObj;
 import com.paycraftsystems.cmfb.dto.response.ResendOTPResponse;
 import com.paycraftsystems.cmfb.dto.response.UserProfileResponse;
 import com.paycraftsystems.cmfb.dto.response.ManagedLoginResponseV2;
+import com.paycraftsystems.cmfb.dto.response.UserLogResponse;
 import com.paycraftsystems.cmfb.dto.response.UserResponse;
 import com.paycraftsystems.cmfb.email.resources.MailProcessor;
 import com.paycraftsystems.cmfb.entities.FailedLoginHistory;
 import com.paycraftsystems.cmfb.entities.FailedLoginInfo;
 import com.paycraftsystems.cmfb.entities.OTPLog;
 import com.paycraftsystems.cmfb.entities.RolesInfo;
-import com.paycraftsystems.cmfb.entities.Status;
+import com.paycraftsystems.cmfb.entities.UserLog;
 import com.paycraftsystems.cmfb.entities.UserProfile;
 import com.paycraftsystems.cmfb.enumz.OTPStatus;
 import com.paycraftsystems.cmfb.enumz.ResourceStatusEnum;
+import com.paycraftsystems.cmfb.repositories.UserLogRepository;
 import com.paycraftsystems.cmfb.repositories.UserRepository;
 import com.paycraftsystems.cmfb.services.AuthService;
 import com.paycraftsystems.exceptions.CMFBException;
@@ -59,10 +61,10 @@ import com.paycraftsystems.resources.RandomCharacter;
 import com.paycraftsystems.resources.ValidationHelper;
 import io.quarkus.hibernate.orm.panache.Panache;
 import io.quarkus.hibernate.orm.panache.PanacheQuery;
+import static io.quarkus.logging.Log.info;
 import io.quarkus.panache.common.Page;
 import io.smallrye.common.constraint.NotNull;
 import jakarta.ws.rs.WebApplicationException;
-import java.math.BigInteger;
 import java.text.SimpleDateFormat;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -104,6 +106,9 @@ public class UserController {
     
     @Inject
     SysDataController sysDataHelper;
+    
+    @Inject
+    UserLogRepository userLogRepo;
     
     @Inject
     ESEQRepository eSEQHelper;
@@ -334,7 +339,7 @@ public class UserController {
                     */
                     UserProfile doLookup = userRepository.doFindByEmailAddress(fromJson.emailAddress);//.doFindByEmailAddress(fromJson.emailAddress);//loadByMobileAndAccountNo(fromJson.mobileNo, fromJson.accountNo);// doLookupByMSISDN(fromJson.getPhoneNumberPri());  //fromJson.getEmailAddress()
 
-                    if(doLookup != null)
+                    if(doLookup != null && doLookup.status !=null && (doLookup.status.equalsIgnoreCase("INIT_FORCE_PASSWORD_CHANGE") || doLookup.status.equalsIgnoreCase("INACTIVE")))
                     {
 
                              if("INACTIVE".equals(doLookup.status))// == 10)
@@ -391,6 +396,7 @@ public class UserController {
                                                 
                                                 CompletionStage<Boolean> sendAdminWelcomeEmailAsync = mailProcessor.sendAdminWelcomeEmailAsync(mailinfo);
                                                 LOGGER.info(" -- sendAdminWelcomeEmailAsync RESEND OTP --  "+sendAdminWelcomeEmailAsync);
+                                                
                                                  
                                                 
                                      }
@@ -724,10 +730,217 @@ public class UserController {
         
     }
     */
+    
+    public UserLogResponse doCreateProfileXOXV2(@Valid UserProfileRequest json) {
+        int prodOrDev = Integer.parseInt(sysDataHelper.getProps("INTEGRATION-MODE", "0"));
+        
+        LOGGER.info(" @@@@-: doCreateProfileXOX -: "+json);
+        String otp = "";
+        UserProfile userProfile =  null;
+        List<UserLog> profiles = new ArrayList<>();
+        //NotificationsFeed doLog = null;
+        try 
+        {
+            UserProfileRequestObj fromJson = new UserProfileRequestObj(json);
+            log.info(" -- fromJson -- "+fromJson);
+            if(fromJson == null)
+            {
+               
+                 return new UserLogResponse(false, ErrorCodes.FORMAT_ERROR, ErrorCodes.doErrorDesc(ErrorCodes.FORMAT_ERROR), null, null);
+            
+            }
+            else
+            {
+                        userProfile = userRepository.loadByTellerParams(fromJson.lastName, fromJson.mobileNo, fromJson.tilAccount);//, fromJson.accountNo);
+                        
+                        LOGGER.info(" -- userProfile --  "+userProfile);
+                        if(userProfile != null)
+                        {
+                            return new UserLogResponse(false, ErrorCodes.USER_PROFILE_EXISTS, ErrorCodes.doErrorDesc(ErrorCodes.USER_PROFILE_EXISTS), null, null);
+            
+                        }
+                        /*
+                        UserLog doFindByTID = userLogRepo.doFindByTID(fromJson.actionBy);
+                        log.info(" @@@ --- "+doFindByTID);
+                        if(doFindByTID == null || (fromJson != null && fromJson.userRole == 1 || doFindByTID.userRole == fromJson.userRole))
+                        {
+                            return new UserLogResponse(false, ErrorCodes.TRANSACTION_FORBIDDEN, ErrorCodes.doErrorDesc(ErrorCodes.TRANSACTION_FORBIDDEN)+" - You cannot create a user with the same role as you", null, null);
+            
+                        }
+                        */
+                        if(sysDataHelper.getProps("INTEGRATION-MODE", "0").equals("1"))
+                        {
+
+                            otp = sysDataHelper.getProps("INTEGRATION-PIN", "0000");
+                        }
+                        else
+                        {
+                            otp = String.valueOf(new Random().nextInt(1234567890)).substring(0, 4);
+                        }
+                
+                        LOGGER.info(" - CREATE PROFILE  DEFAULT PIN "+otp);
+                        
+                        String otpmsg = "Your OTP is "+otp+" Kindly note that, it expires in "+sysDataHelper.getProps("OTP-TIME-OUT", "0")+" minutes, Please do not disclose";
+                        /*
+                        UserProfile profile = new UserProfile();
+                        
+                        profile.createdDate = LocalDateTime.now();
+                        profile.emailAddress = fromJson.emailAddress;
+                        profile.firstName = fromJson.firstName;
+                        profile.full_name = fromJson.lastName+" "+((fromJson.middleName ==null)?"":fromJson.middleName)+" "+fromJson.firstName;
+                        profile.lastName = fromJson.lastName;
+                        profile.loginStatus = 0;
+                        profile.mobileNo = fromJson.mobileNo;
+                        profile.tilAccount   = fromJson.tilAccount;
+                        profile.status = ResourceStatusEnum.INACTIVE.name();// BigInteger.TEN.longValue();
+                        //profile.statusStr = Status.doStatusDescById(profile.status);
+                        profile.userRole = fromJson.userRole;
+                        profile.userRoleStr = RolesInfo.doFindRoleDescByCode(profile.userRole);
+                        */
+                        log.info("--++  here -- ** @@");
+                       
+                        
+                        UserProfile merge = userLogRepo.doLogV2(fromJson, otp, otpmsg);// userLogRepo.doLog(fromJson, otp, otpmsg);//, fromJson.userRole);// Panache.getEntityManager().merge(user);  UserProfile.doLog(fromJson, fromJson.userRole);
+
+                        //profiles.add(merge);
+                        LOGGER.info(" **-  #### merge = " + merge);
+
+                             
+                         return new UserLogResponse(true, ErrorCodes.SUCCESSFUL, ErrorCodes.doErrorDesc(ErrorCodes.SUCCESSFUL), merge, null);
+                           
+                         /*
+                            if(merge == null)
+                            {
+                                return new UserProfileResponse(false, ErrorCodes.DATABASE_ERROR, ErrorCodes.doErrorDesc(ErrorCodes.DATABASE_ERROR), null, null);
+                            }
+                            else
+                            {
+                         
+                                  NotificationRequest mailinfo = new NotificationRequest();
+                        mailinfo.toShare = otp;
+                        mailinfo.toShare1 = otpmsg;
+                        mailinfo.addressee = fromJson.lastName;
+                        mailinfo.sendTo = fromJson.emailAddress;
+                        mailinfo.message = otpmsg;
+                                                      //System.out.println(" $$$$$$$ ");
+                                                   // return Response.ok().entity(merge.toJson()).build();
+                                                      int doLogOTP =  otpController.doLogOTP(merge.mobileNo, merge.emailAddress, otp, OTPStatus.ACTIVE.name()); 
+                                                      System.out.println(" ** doLogOTP = " + doLogOTP);
+                                                      if(doLogOTP == ErrorCodes.SUCCESSFUL)
+                                                      {
+                                                          CompletionStage<Boolean> sendAdminWelcomeEmailAsync = mailProcessor.sendAdminWelcomeEmailAsync(mailinfo);
+                                                          LOGGER.info(" -- sendAdminWelcomeEmailAsync --  "+sendAdminWelcomeEmailAsync);
+                                                          
+                                                         // return Response.ok().entity(merge.toJson()).build();
+                                                          
+                                                         return new UserProfileResponse(true, ErrorCodes.SUCCESSFUL, ErrorCodes.doErrorDesc(ErrorCodes.SUCCESSFUL), profiles, null);
+                           
+                                                      }
+                                                      else
+                                                      {
+                                                          System.out.println("doLogOTP = ????? "+merge);
+                                                         // merge.delete();
+                                                          
+                                                          return new UserProfileResponse(false, doLogOTP, ErrorCodes.doErrorDesc(doLogOTP), profiles, null);
+                           
+                                                      }
+                              
+                            
+                                 }
+                 
+                   */
+            
+            }
+           
+        }
+        catch(WebApplicationException e)
+        {
+         
+           return new UserLogResponse(false, e.getResponse().getStatus(), ErrorCodes.doErrorDesc(e.getResponse().getStatus()), profiles, null);
+          
+        }
+        catch (Exception e) {
+       
+               LOGGER.info(" -!!-  doCreateProfile Exception ",e);
+           // e.printStackTrace();
+               if((e.getCause() instanceof java.sql.SQLSyntaxErrorException) || ( e.getCause() instanceof  org.hibernate.HibernateException) || ( e.getCause() instanceof  org.hibernate.exception.ConstraintViolationException) || ( e.getCause() instanceof  java.sql.SQLIntegrityConstraintViolationException) || (e.getCause() instanceof java.sql.SQLIntegrityConstraintViolationException) || (e.getCause() instanceof jakarta.persistence.PersistenceException || (e.getCause() instanceof org.hibernate.exception.DataException)))
+                {
+                    
+                    return new UserLogResponse(false, ErrorCodes.DATABASE_ERROR, ErrorCodes.doErrorDesc(ErrorCodes.DATABASE_ERROR)+"-"+e.getMessage(), profiles, null);
+           
+                }//
+                else if((e.getCause() instanceof java.net.ConnectException))
+                {
+                   
+                    return new UserLogResponse(false, ErrorCodes.COMM_LINK, ErrorCodes.doErrorDesc(ErrorCodes.COMM_LINK)+"-"+e.getMessage(), profiles, null);
+           
+                }
+                else if((e.getCause() instanceof java.io.IOException))
+                {
+                    
+                    return new UserLogResponse(false, ErrorCodes.IO_EXCEPTION, ErrorCodes.doErrorDesc(ErrorCodes.IO_EXCEPTION), profiles, null);
+           
+                }
+                else
+                {
+                   
+                     return new UserLogResponse(false, ErrorCodes.SYSTEM_ERROR, ErrorCodes.doErrorDesc(ErrorCodes.SYSTEM_ERROR), profiles, null);
+           
+                }
+        }
+    }
+    
     @Transactional
+    public UserLogResponse doCreateProfileXOXV2XXX(@Valid UserProfileRequest json) {
+        int prodOrDev = Integer.parseInt(sysDataHelper.getProps("INTEGRATION-MODE", "0"));
+        
+        LOGGER.info(" @@@@-: doCreateProfileXOX -: "+json);
+        String otp = "2222";
+        UserProfile userProfile =  null;
+        List<UserLog> profiles = new ArrayList<>();
+        //NotificationsFeed doLog = null;
+        try 
+        {
+            UserProfileRequestObj fromJson = new UserProfileRequestObj(json);
+            log.info(" -- fromJson -- "+fromJson);
+                                  
+                
+                        LOGGER.info(" - CREATE PROFILE  DEFAULT PIN "+otp);
+                        
+                        String otpmsg = "Your OTP is "+otp+" Kindly note that, it expires in "+sysDataHelper.getProps("OTP-TIME-OUT", "0")+" minutes, Please do not disclose";
+                       
+                        long merge =  userLogRepo.doLog(fromJson, otp, otpmsg);// userLogRepo.doLog(fromJson, otp, otpmsg);//, fromJson.userRole);// Panache.getEntityManager().merge(user);  UserProfile.doLog(fromJson, fromJson.userRole);
+
+                        //profiles.add(merge);
+                        LOGGER.info(" **-  #### merge = " + merge);
+
+                             
+                         return new UserLogResponse(true, ErrorCodes.SUCCESSFUL, ErrorCodes.doErrorDesc(ErrorCodes.SUCCESSFUL), merge, null);
+                        
+            
+            
+           
+        }
+        catch(WebApplicationException e)
+        {
+            e.printStackTrace();
+           return new UserLogResponse(false, e.getResponse().getStatus(), ErrorCodes.doErrorDesc(e.getResponse().getStatus()), profiles, null);
+          
+        }
+        catch (Exception e) {
+               e.printStackTrace();
+               LOGGER.info(" -!!-  doCreateProfile Exception ",e);
+           // e
+            return new UserLogResponse(false, ErrorCodes.SYSTEM_ERROR, ErrorCodes.doErrorDesc(ErrorCodes.SYSTEM_ERROR)+"-"+e.getMessage(), profiles, null);
+           
+        }
+    }
+    
+    
+     @Transactional
     public UserProfileResponse doCreateProfileXOX(@Valid UserProfileRequest json) {
-         int prodOrDev = Integer.parseInt(sysDataHelper.getProps("INTEGRATION-MODE", "0"));
-      
+        int prodOrDev = Integer.parseInt(sysDataHelper.getProps("INTEGRATION-MODE", "0"));
+        
         LOGGER.info(" @@@@-: doCreateProfileXOX -: "+json);
         String otp = "";
         UserProfile userProfile =  null;
@@ -753,6 +966,14 @@ public class UserController {
                             return new UserProfileResponse(false, ErrorCodes.USER_PROFILE_EXISTS, ErrorCodes.doErrorDesc(ErrorCodes.USER_PROFILE_EXISTS), null, null);
             
                         }
+                        
+                        UserProfile doFindByTID = userRepository.doFindByTID(fromJson.actionBy);
+                        log.info(" @@@ --- "+doFindByTID);
+                        if(doFindByTID == null || (fromJson != null && fromJson.userRole == 1 || doFindByTID.userRole == fromJson.userRole))
+                        {
+                            return new UserProfileResponse(false, ErrorCodes.TRANSACTION_FORBIDDEN, ErrorCodes.doErrorDesc(ErrorCodes.TRANSACTION_FORBIDDEN)+" - You cannot create a user with the same role as you", null, null);
+            
+                        }
                     
                         if(sysDataHelper.getProps("INTEGRATION-MODE", "0").equals("1"))
                         {
@@ -767,7 +988,7 @@ public class UserController {
                         LOGGER.info(" - CREATE PROFILE  DEFAULT PIN "+otp);
                         
                         String otpmsg = "Your OTP is "+otp+" Kindly note that, it expires in "+sysDataHelper.getProps("OTP-TIME-OUT", "0")+" minutes, Please do not disclose";
-                      
+                        /*
                         UserProfile profile = new UserProfile();
                         
                         profile.createdDate = LocalDateTime.now();
@@ -782,20 +1003,24 @@ public class UserController {
                         //profile.statusStr = Status.doStatusDescById(profile.status);
                         profile.userRole = fromJson.userRole;
                         profile.userRoleStr = RolesInfo.doFindRoleDescByCode(profile.userRole);
-                        
+                        */
+                        log.info("--++  here -- ** ");
                         NotificationRequest mailinfo = new NotificationRequest();
                         mailinfo.toShare = otp;
                         mailinfo.toShare1 = otpmsg;
                         mailinfo.addressee = fromJson.lastName;
                         mailinfo.sendTo = fromJson.emailAddress;
                         mailinfo.message = otpmsg;
-                
-                        UserProfile merge = userRepository.doLog(profile);//, fromJson.userRole);// Panache.getEntityManager().merge(user);  UserProfile.doLog(fromJson, fromJson.userRole);
+                        
+                        UserProfile merge = userRepository.doLog(fromJson, otp, otpmsg);//, fromJson.userRole);// Panache.getEntityManager().merge(user);  UserProfile.doLog(fromJson, fromJson.userRole);
 
                         profiles.add(merge);
                         LOGGER.info(" **-  #### merge = " + merge);
 
-                        
+                             
+                         return new UserProfileResponse(true, ErrorCodes.SUCCESSFUL, ErrorCodes.doErrorDesc(ErrorCodes.SUCCESSFUL), profiles, null);
+                           
+                         /*
                             if(merge == null)
                             {
                                 return new UserProfileResponse(false, ErrorCodes.DATABASE_ERROR, ErrorCodes.doErrorDesc(ErrorCodes.DATABASE_ERROR), null, null);
@@ -804,8 +1029,8 @@ public class UserController {
                             {
                                                       //System.out.println(" $$$$$$$ ");
                                                    // return Response.ok().entity(merge.toJson()).build();
-                                                      int doLogOTP = otpController.doLogOTP(merge.mobileNo, merge.emailAddress, otp, OTPStatus.ACTIVE.name()); 
-                                                      System.out.println("doLogOTP = " + doLogOTP);
+                                                      int doLogOTP =  otpController.doLogOTP(merge.mobileNo, merge.emailAddress, otp, OTPStatus.ACTIVE.name()); 
+                                                      System.out.println(" ** doLogOTP = " + doLogOTP);
                                                       if(doLogOTP == ErrorCodes.SUCCESSFUL)
                                                       {
                                                           CompletionStage<Boolean> sendAdminWelcomeEmailAsync = mailProcessor.sendAdminWelcomeEmailAsync(mailinfo);
@@ -818,8 +1043,8 @@ public class UserController {
                                                       }
                                                       else
                                                       {
-
-                                                          merge.delete();
+                                                          System.out.println("doLogOTP = ????? "+merge);
+                                                         // merge.delete();
                                                           
                                                           return new UserProfileResponse(false, doLogOTP, ErrorCodes.doErrorDesc(doLogOTP), profiles, null);
                            
@@ -828,7 +1053,7 @@ public class UserController {
                             
                                  }
                  
-               
+                   */
             
             }
            
@@ -1260,7 +1485,13 @@ public class UserController {
             
             LOGGER.info("#@@- doLookup - "+doLookup);
             
-            if(doLookup != null )
+            if(doLookup != null && !"ACTIVE".equalsIgnoreCase(doLookup.status))
+            {
+                
+                 return new ManagedLoginResponseV2(false, ErrorCodes.FORBIDDEN_ACTION, ErrorCodes.doErrorDesc(ErrorCodes.FORBIDDEN_ACTION),null,null, null);
+              
+            }
+            else if(doLookup != null && "ACTIVE".equalsIgnoreCase(doLookup.status))
             {
                    UserLoginRequestV2 userLoginRequestV2 = new UserLoginRequestV2(doLookup.emailAddress, doLookup.mobileNo, fromJson.password, sysDataHelper.getProps("CHANNEL", "0"), doLookup.tid);
                    ///JsonObject authSync = Json.createObjectBuilder().add("code", rh.toDefault(doLookup.emailAddress)).add("codeLink", rh.toDefault(doLookup.mobileNo)).add("password", rh.toDefault(fromJson.password)).add("channel", sysDataHelper.getProps("CHANNEL", "0")).add("pid", doLookup.tid).build();
@@ -1268,7 +1499,6 @@ public class UserController {
                    return  doAdminManageLogins(doLookup.tid, Integer.parseInt(sysDataHelper.getProps("MAX-ALLOWED-FAILED-LOGIN-ATTEMPTS", "0")), Integer.parseInt(sysDataHelper.getProps("FAILED-LOGIN-SUSPENSE", "0")),doLookup, userLoginRequestV2);
 
             }
-            
             else
             {
                 
@@ -1951,7 +2181,7 @@ public class UserController {
         try
         {
         
-             InitForcePasswordChangeRequestObj  fromJson = new InitForcePasswordChangeRequestObj(request);
+            InitForcePasswordChangeRequestObj  fromJson = new InitForcePasswordChangeRequestObj(request);
              
             
             UserProfile doLookup = userRepository.doFindByEmailAddress(fromJson.emailAddress);//.doFindByUsername(fromJson.emailAddress);

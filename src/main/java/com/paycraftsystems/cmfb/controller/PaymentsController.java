@@ -6,6 +6,8 @@ package com.paycraftsystems.cmfb.controller;
 
 import com.paycraftsystems.cmfb.dto.ApproveOrDeleteRequest;
 import com.paycraftsystems.cmfb.dto.ApproveOrDeleteRequestObj;
+import com.paycraftsystems.cmfb.dto.CompletePaymentRequest;
+import com.paycraftsystems.cmfb.dto.CompletePaymentRequestObj;
 import com.paycraftsystems.cmfb.dto.FilterRequest;
 import com.paycraftsystems.cmfb.dto.FilterRequestObj;
 import com.paycraftsystems.cmfb.dto.InitPaymentRequest;
@@ -15,6 +17,8 @@ import com.paycraftsystems.cmfb.dto.PaymentSetupEditRequest;
 import com.paycraftsystems.cmfb.dto.PaymentSetupEditRequestObj;
 import com.paycraftsystems.cmfb.dto.PaymentSetupRequest;
 import com.paycraftsystems.cmfb.dto.PaymentSetupRequestObj;
+import com.paycraftsystems.cmfb.dto.response.MakePaymentResponse;
+import com.paycraftsystems.cmfb.dto.response.MakePaymentResponseData;
 import com.paycraftsystems.cmfb.dto.response.PaymentProcessResponse;
 import com.paycraftsystems.cmfb.dto.response.PaymentSetupResponse;
 import com.paycraftsystems.cmfb.dto.response.ValidateCheckResponse;
@@ -22,6 +26,7 @@ import com.paycraftsystems.cmfb.entities.PaymentBeneficiarySetup;
 import com.paycraftsystems.cmfb.entities.PaymentSetup;
 import com.paycraftsystems.cmfb.entities.SysData;
 import com.paycraftsystems.cmfb.entities.TransactionLog;
+import com.paycraftsystems.cmfb.enumz.ResourceStatusEnum;
 import com.paycraftsystems.cmfb.repositories.PaymentsBeneficiaryRepository;
 import com.paycraftsystems.cmfb.repositories.PaymentsRepository;
 import com.paycraftsystems.cmfb.repositories.SysDataRepository;
@@ -67,12 +72,18 @@ public class PaymentsController {
     @Inject
     ThirdPartyPaymentController thirdPartyPay;
     
+   
+    
     
     @Inject
     PaymentsBeneficiaryRepository paymentsBeneficiaryRepo;
     
    
     public List<SysData>  all;
+    
+//    @Inject
+//    @Channel("payment-notifications")
+//    Emitter<String> emitter;
     
     
     
@@ -826,14 +837,14 @@ public class PaymentsController {
             
             log.info("-- PaymentProcessResponse doInitPayment --- doLookUpById "+doLookUpById);
             
-            if(!doLookUpById.amountFixed  && doLookUpById.amount !=paymentObj.amount)
+            if(doLookUpById.amountFixed !=null && doLookUpById.amountFixed  && doLookUpById.amount !=paymentObj.amount)
             {
                 throw new InvalidRequestException(String.format("Invalid transaction Amount for payment for {%s} : {%s} : {%s}",
                             doLookUpById.productId, request.doPayeeName(), request.payeeId()));
             }
             
             String transDesc = LocalDate.now()+"/"+doLookUpById.productId+"/"+request.doPayeeName()+"/"+request.amount();
-            TransactionLog doLog = transLogRepo.doLog(request, transDesc);
+            TransactionLog doLog = transLogRepo.doLog(request, transDesc, doLookUpById.beneficiaryName, doLookUpById.productId);
             //OtherPaymentParams(String username, String plainpassword, String transid, String tenantcode, String paymenttype)
             OtherPaymentParams otherPaymentParams = new OtherPaymentParams(sysDataRepo.doLookUpByNameStr("CU-USERNAME", "NA"), sysDataRepo.doLookUpByNameStr("CU-PASSWORD", "NA"), doLog.transactionId, sysDataRepo.doLookUpByNameStr("CU-TENANTCODE", "NA"), doLookUpById.productId);
            
@@ -846,7 +857,7 @@ public class PaymentsController {
             if(doInitiateCUPayment !=null && doInitiateCUPayment.payparameter() !=null && doInitiateCUPayment.payparameter().responsecode() !=null && doInitiateCUPayment.payparameter().responsecode().equals("09"))
             {
            
-                  TransactionLog doSync = transLogRepo.doSync(doLog, doInitiateCUPayment);
+                  TransactionLog doSync = transLogRepo.doSync(doLog, doInitiateCUPayment, ResourceStatusEnum.ACTIVE.name());
                   
                   log.info("--TransactionLog  doSync --  "+doSync);
                   
@@ -854,11 +865,11 @@ public class PaymentsController {
             }
             else  if(doInitiateCUPayment !=null && doInitiateCUPayment.payparameter() !=null && doInitiateCUPayment.payparameter().responsecode() !=null && !doInitiateCUPayment.payparameter().responsecode().equals("00"))
             {
-                  TransactionLog doSync = transLogRepo.doSync(doLog, doInitiateCUPayment);
+                  TransactionLog doSync = transLogRepo.doSync(doLog, doInitiateCUPayment, ResourceStatusEnum.FAILED_VERIFICATION.name());
                   
                   log.info("-@@-TransactionLog  doSync --  "+doSync);
                 
-                 return new PaymentProcessResponse(false, ErrorCodes.PARTNER_VALIDATION_ERROR, ErrorCodes.doErrorDesc(ErrorCodes.PARTNER_VALIDATION_ERROR), null, doInitiateCUPayment.payparameter().responsename());
+                 return new PaymentProcessResponse(false, ErrorCodes.PARTNER_VALIDATION_ERROR, ErrorCodes.doErrorDesc(ErrorCodes.PARTNER_VALIDATION_ERROR)+"-"+doInitiateCUPayment.payparameter().responsename(), null, doInitiateCUPayment.payparameter().responsename());
           
             }
             else
@@ -871,7 +882,81 @@ public class PaymentsController {
         }catch(InvalidRequestException e)
         {
             e.printStackTrace();
-            return new PaymentProcessResponse(false, ErrorCodes.INVALID_AMOUNT, ErrorCodes.doErrorDesc(ErrorCodes.INVALID_AMOUNT), null, null);
+            return new PaymentProcessResponse(false,  ErrorCodes.BAD_REQUEST, ErrorCodes.doErrorDesc(ErrorCodes.BAD_REQUEST)+"-"+e.getMessage(), null, null);
+          
+        }
+        catch (Exception e) {
+        
+        
+            log.error("Exception @ doInitPayment", e);
+            
+            return new PaymentProcessResponse(false, ErrorCodes.SYSTEM_ERROR, ErrorCodes.doErrorDesc(ErrorCodes.SYSTEM_ERROR), null, e.getMessage());
+        }
+  
+     // return null;
+    }
+    
+    public PaymentProcessResponse doCompletePayment(CompletePaymentRequest request) {
+        
+        try 
+        {
+            CompletePaymentRequestObj  paymentObj = new CompletePaymentRequestObj(request);
+            
+            TransactionLog doLookUpById = transLogRepo.doLookupById(paymentObj.paymentId);
+            
+            if(doLookUpById ==null)
+            {
+                throw new InvalidRequestException(String.format("Invalid Payment/ not found {%d}", paymentObj.paymentId));
+            }
+            
+            if(doLookUpById !=null  && !"ACTIVE".equals(doLookUpById.transStatus))
+            {
+                throw new InvalidRequestException(String.format("Invalid Payment/ not available {%d}", paymentObj.paymentId));
+            }
+            
+            log.info("-- PaymentProcessResponse doInitPayment --- doLookUpById "+doLookUpById);
+//            
+//            if(!doLookUpById.amountFixed  && doLookUpById.amount !=paymentObj.amount)
+//            {
+//                throw new InvalidRequestException(String.format("Invalid transaction Amount for payment for {%s} : {%s} : {%s}",
+//                            doLookUpById.productId, request.doPayeeName(), request.payeeId()));
+//            }
+ 
+            
+            //MakePaymentResponse paymentResponse = thirdPartyPay.doCompleteCUPayment(doLookUpById.paymentCode);
+            MakePaymentResponse paymentResponse =  new MakePaymentResponse(new MakePaymentResponseData("00", "999010708907", "99901076869019681473", "1.00", "TEST DRIVE", "21AB028501", "1", "CU01"));
+            log.info("--  doInitiateCUPayment -- "+paymentResponse);
+            
+            ///PaymentProcessResponse(boolean success, int errorCode, String errorDesc, Object data, String error)
+            if(paymentResponse !=null && paymentResponse.payparameter() !=null && paymentResponse.payparameter().success() !=null && paymentResponse.payparameter().receiptno() !=null && paymentResponse.payparameter().receiptno().length() > 3)
+            {
+           
+                  TransactionLog doSync = transLogRepo.doSyncPayment(doLookUpById.tid, paymentResponse);
+                  
+                  log.info("--TransactionLog  doSyncPayment --  "+doSync);
+                  
+                  return new PaymentProcessResponse(true, ErrorCodes.SUCCESSFUL, ErrorCodes.doErrorDesc(ErrorCodes.SUCCESSFUL), doSync.toCUReceiptObj(),((doSync.customResponseParam1 != null)?"Sucessful":"failed").toUpperCase());
+            }
+            else  if(paymentResponse !=null && paymentResponse.payparameter() !=null && paymentResponse.payparameter().success()!=null && !paymentResponse.payparameter().success().equals("1"))
+            {
+                  TransactionLog doSync = transLogRepo.doSyncPayment(doLookUpById.tid, paymentResponse);
+                  
+                  log.info("-@@-TransactionLog  doSync --  "+doSync);
+                
+                 return new PaymentProcessResponse(false, ErrorCodes.PARTNER_VALIDATION_ERROR, ErrorCodes.doErrorDesc(ErrorCodes.PARTNER_VALIDATION_ERROR), null, "Error Occured");
+          
+            }
+            else
+            {
+                 return new PaymentProcessResponse(false, ErrorCodes.SYSTEM_ERROR, ErrorCodes.doErrorDesc(ErrorCodes.SYSTEM_ERROR), null, null);
+          
+            }
+        
+            
+        }catch(InvalidRequestException e)
+        {
+            e.printStackTrace();
+            return new PaymentProcessResponse(false, ErrorCodes.BAD_REQUEST, ErrorCodes.doErrorDesc(ErrorCodes.BAD_REQUEST)+"-"+e.getMessage(), null, null);
           
         }
         catch (Exception e) {

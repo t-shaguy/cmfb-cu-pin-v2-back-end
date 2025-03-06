@@ -105,6 +105,7 @@ public class SysDataRepository implements  PanacheRepository<SysData> {
                 obj.paramName = request.paramName;
                 obj.paramValue = request.paramValue;
                 obj.createdDate = LocalDateTime.now();
+                obj.authBy = Long.parseLong("0");
                 obj.status = ResourceStatusEnum.INACTIVE.name();
                 obj = Panache.getEntityManager().merge(obj);
            }
@@ -138,7 +139,7 @@ public class SysDataRepository implements  PanacheRepository<SysData> {
               doLookUpByParamName.paramValue  = request.paramValue;
               doLookUpByParamName.lastUpatedDate = LocalDateTime.now();
               doLookUpByParamName.lastUpdatedBy = request.actionBy;
-             
+              doLookUpByParamName.authBy = Long.parseLong("0");
               
               SysData merge = Panache.getEntityManager().merge(doLookUpByParamName);
               log.info(" doSync-- merge");

@@ -12,7 +12,6 @@ import com.paycraftsystems.cmfb.controller.SysDataController;
 import com.paycraftsystems.cmfb.dto.UserProfileRequest;
 import com.paycraftsystems.cmfb.dto.UserProfileRequestObj;
 import com.paycraftsystems.cmfb.entities.RolesInfo;
-import com.paycraftsystems.cmfb.entities.Status;
 import com.paycraftsystems.cmfb.entities.UserProfile;
 import com.paycraftsystems.cmfb.enumz.ResourceStatusEnum;
 import com.paycraftsystems.exceptions.CMFBException;
@@ -23,8 +22,8 @@ import io.quarkus.hibernate.orm.panache.PanacheRepository;
 //import io.vertx.core.impl.logging.LoggerFactory;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
+import jakarta.persistence.EntityManager;
 import jakarta.transaction.Transactional;
-import java.math.BigInteger;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -43,6 +42,9 @@ public class UserRepository implements PanacheRepository<UserProfile> {
     
     @Inject 
     SysDataController sysdata;
+    
+    @Inject
+    EntityManager em;
     
     @Inject
     ESEQHelper eseq;
@@ -454,21 +456,47 @@ public class UserRepository implements PanacheRepository<UserProfile> {
     
     
     @Transactional
-    public  UserProfile doLog(UserProfile obj) throws Exception {
-        log.info(" UserProfile doLog "+obj);
+    public  UserProfile doLog(UserProfileRequestObj fromJson, String otp, String otpmsg) throws Exception {
+        log.info(" UserProfile doLog "+fromJson);
         UserProfile objx = null;
+        UserProfile profile = new UserProfile();
         try 
         {
-           
-                objx = Panache.getEntityManager().merge(obj);
-            
+                 //UserProfile profile = new UserProfile();
+                        
+                        profile.createdDate = LocalDateTime.now();
+                        profile.emailAddress = fromJson.emailAddress;
+                        profile.firstName = fromJson.firstName;
+                        profile.full_name = fromJson.lastName+" "+((fromJson.middleName ==null)?"":fromJson.middleName)+" "+fromJson.firstName;
+                        profile.lastName = fromJson.lastName;
+                        profile.loginStatus = 0;
+                        profile.mobileNo = fromJson.mobileNo;
+                        profile.tilAccount   = fromJson.tilAccount;
+                        profile.status = ResourceStatusEnum.INACTIVE.name();// BigInteger.TEN.longValue();
+                        //profile.statusStr = Status.doStatusDescById(profile.status);
+                        profile.userRole = fromJson.userRole;
+                        profile.userRoleStr = RolesInfo.doFindRoleDescByCode(profile.userRole);
+                        log.info("--++  here -- "+profile);
+                       
+                        //Panache.getEntityManager().persist(profile);
+                        log.info("-- using em -- ");
+                        objx = em.merge(profile);
+                       
+                        log.info("-- using em -done- "+objx);
+                        
+                      // System.out.println("mailinfo = " + mailinfo);
+                      /// objx = Panache.getEntityManager().merge(profile);
+                       
+                       
+                       Panache.getEntityManager().flush();
+                       log.info("--UserProfile doLog "+objx);
             
         } catch (Exception e) {
-            
+            e.printStackTrace();
             log.error(" -- Exception @ UserProfile doLog ", e);
             throw new Exception(e);
         }
-      return obj; 
+      return objx; 
     }
     
     
@@ -581,12 +609,50 @@ public class UserRepository implements PanacheRepository<UserProfile> {
     */
     
     @Transactional
-    public static UserProfile doLog(UserProfileRequest request) throws Exception {
+    public static UserProfile doLog(UserProfile request) throws Exception {
         
         UserProfile merge = null;
         try 
         {
-            UserProfileRequestObj fromJson =new UserProfileRequestObj(request);
+//            UserProfileRequestObj fromJson =new UserProfileRequestObj(request);
+//            UserProfile user = new UserProfile();
+//            //user.status = BigInteger.TEN.longValue();
+//            user.firstName = fromJson.firstName;
+//            user.middleName = fromJson.middleName;
+//           // user.accountTag = "A";
+//            user.lastName = fromJson.lastName;
+//            user.tilAccount = fromJson.tilAccount;
+//            user.emailAddress = fromJson.emailAddress;
+//            RolesInfo doFindByTid = RolesInfo.doFindByTid(fromJson.userRole);
+//            //user.accountType = doFindByTid ==null?"ERROR":doFindByTid.roleName; //doBuildISOMsg.getString(125);
+//            //user.accountNo = fromJson.accountNo;
+//            user.mobileNo = fromJson.mobileNo;
+//            user.status = ResourceStatusEnum.ACTIVE.name();
+//            user.userRole = fromJson.userRole;//Integer.parseInt(sysDataHelper.loadValueByName("BANK_CUSTOMER_ROLE_ID", "0"));
+//            user.userRoleStr = RolesInfo.doFindRoleCodeById(user.userRole);
+//            user.full_name = fromJson.lastName+" "+fromJson.middleName==null?"NA":fromJson.middleName+" "+fromJson.firstName ;//doBuildISOMsg.getString(125);
+//            //user.statusStr = Status.doStatusDescById(user.status);
+//            user.createdDate = LocalDateTime.now();
+           // user.bvn = "NA";//(doBuildISOMsg.hasField(126))? (doBuildISOMsg.getString(126).split("#")[0]).replaceAll("\\+234", "0"):"NA";
+            //user.kyc = "1";
+            merge = Panache.getEntityManager().merge(request);
+            
+        } catch (Exception e) {
+        
+            log.error(" ||||||| ",e);
+            throw new Exception(e);
+        
+        }
+      return merge;
+        
+    }
+    @Transactional
+    public static UserProfile doLogXX(UserProfile request) throws Exception {
+        
+        UserProfile merge = null;
+        try 
+        {
+            UserProfileRequestObj fromJson = null;//new UserProfileRequestObj(request);
             UserProfile user = new UserProfile();
             //user.status = BigInteger.TEN.longValue();
             user.firstName = fromJson.firstName;

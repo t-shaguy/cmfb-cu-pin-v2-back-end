@@ -5,20 +5,14 @@
 package com.paycraftsystems.cmfb.boundary;
 
 import com.paycraftsystems.cmfb.controller.PaymentsBeneficiaryController;
-import com.paycraftsystems.cmfb.controller.PaymentsController;
 import com.paycraftsystems.cmfb.controller.SysDataController;
 import com.paycraftsystems.cmfb.dto.ApproveOrDeleteRequest;
 import com.paycraftsystems.cmfb.dto.FilterRequest;
-import com.paycraftsystems.cmfb.dto.InitPaymentRequest;
 import com.paycraftsystems.cmfb.dto.PaymentBeneficiaryEditRequest;
 import com.paycraftsystems.cmfb.dto.PaymentBeneficiaryRequest;
-import com.paycraftsystems.cmfb.dto.PaymentSetupEditRequest;
-import com.paycraftsystems.cmfb.dto.PaymentSetupRequest;
 import com.paycraftsystems.cmfb.dto.response.PaymentBeneficiaryResponse;
-import com.paycraftsystems.cmfb.dto.response.PaymentProcessResponse;
 import com.paycraftsystems.cmfb.dto.response.PaymentSetupResponse;
 import com.paycraftsystems.cmfb.filters.JWTTokenNeeded;
-import com.paycraftsystems.cmfb.repositories.PaymentsBeneficiaryRepository;
 import io.smallrye.common.constraint.NotNull;
 
 import jakarta.enterprise.context.ApplicationScoped;
@@ -30,6 +24,7 @@ import jakarta.ws.rs.Path;
 import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.core.MediaType;
 import java.io.Serializable;
+import static java.lang.Math.log;
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -52,7 +47,7 @@ public class PaymentsBeneficiaryResource implements Serializable {
     
     @POST
     @Path("/create")
-    //@JWTTokenNeeded
+    @JWTTokenNeeded
     public PaymentBeneficiaryResponse doCreateUSX(@Valid PaymentBeneficiaryRequest request ) {
     
        return payments.doCreate(request);
